@@ -1,0 +1,2191 @@
+openapi: 3.0.3
+info:
+  title: HomeNest API
+  description: |
+    Multi-tenant home renovation project management API.
+
+    ## Authentication
+    All endpoints require a valid JWT Bearer token from Supabase Auth.
+
+    ## Multi-Tenant Architecture
+    All data is scoped to tenants. Users access data through:
+    - **Tenant Memberships**: Full team members with role-based access
+    - **Project Members**: External collaborators with project/stage-scoped access
+
+    ## Rate Limiting
+    Authentication attempts are rate-limited to prevent brute-force attacks.
+  version: 1.0.0
+  contact:
+    name: HomeNest Support
+    email: support@gethomenest.com
+  license:
+    name: Proprietary
+    url: https://gethomenest.com/terms
+
+servers:
+  - url: https://xcueqjasyxutnkvhhkxj.supabase.co/rest/v1
+    description: Production Supabase REST API
+  - url: http://127.0.0.1:54321/rest/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Auth
+    description: Authentication and user management
+  - name: Tenants
+    description: Organization/company management
+  - name: Projects
+    description: Renovation project management
+  - name: Stages
+    description: Project phases and milestones
+  - name: Todos
+    description: Tasks and action items
+  - name: Expenses
+    description: Budget and cost tracking
+  - name: Documents
+    description: File and document management
+  - name: Suppliers
+    description: Contractors and service providers
+  - name: Team
+    description: Tenant membership and team management
+  - name: Project Members
+    description: External collaborator invitations
+  - name: Portal
+    description: Contractor portal endpoints (limited access)
+
+paths:
+  # ============== PROJECTS ==============
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [Projects]
+      summary: List all projects
+      description: Returns projects the user has access to (via tenant membership or project invitation)
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - $ref: '#/components/parameters/orderParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [planning, in-progress, completed, on-hold]
+        - name: tenant_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createProject
+      tags: [Projects]
+      summary: Create a new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProject'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /projects/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getProject
+      tags: [Projects]
+      summary: Get a project by ID
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateProject
+      tags: [Projects]
+      summary: Update a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProject'
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      operationId: deleteProject
+      tags: [Projects]
+      summary: Delete a project
+      description: Requires owner or admin role
+      responses:
+        '204':
+          description: Project deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ============== STAGES ==============
+  /stages:
+    get:
+      operationId: listStages
+      tags: [Stages]
+      summary: List stages
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - name: project_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [not-started, in-progress, completed]
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/StageCategory'
+      responses:
+        '200':
+          description: List of stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stage'
+    post:
+      operationId: createStage
+      tags: [Stages]
+      summary: Create a new stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStage'
+      responses:
+        '201':
+          description: Stage created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+
+  /stages/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getStage
+      tags: [Stages]
+      summary: Get a stage by ID
+      responses:
+        '200':
+          description: Stage details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+    patch:
+      operationId: updateStage
+      tags: [Stages]
+      summary: Update a stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStage'
+      responses:
+        '200':
+          description: Stage updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+    delete:
+      operationId: deleteStage
+      tags: [Stages]
+      summary: Delete a stage
+      responses:
+        '204':
+          description: Stage deleted
+
+  # ============== TODOS ==============
+  /todos:
+    get:
+      operationId: listTodos
+      tags: [Todos]
+      summary: List todos
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [todo, in-progress, completed, cancelled]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - name: is_completed
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of todos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+    post:
+      operationId: createTodo
+      tags: [Todos]
+      summary: Create a new todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTodo'
+      responses:
+        '201':
+          description: Todo created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+
+  /todos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getTodo
+      tags: [Todos]
+      summary: Get a todo by ID
+      responses:
+        '200':
+          description: Todo details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+    patch:
+      operationId: updateTodo
+      tags: [Todos]
+      summary: Update a todo
+      description: |
+        Use this to update todo fields including toggling completion.
+        When setting `is_completed: true`, the `completed_at` timestamp is auto-set.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTodo'
+      responses:
+        '200':
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+    delete:
+      operationId: deleteTodo
+      tags: [Todos]
+      summary: Delete a todo
+      responses:
+        '204':
+          description: Todo deleted
+
+  # ============== EXPENSES ==============
+  /expenses:
+    get:
+      operationId: listExpenses
+      tags: [Expenses]
+      summary: List expenses
+      description: |
+        For tenant members: returns all project expenses.
+        For external collaborators: returns only their own expenses (RLS enforced).
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: stage_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, paid]
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'
+    post:
+      operationId: createExpense
+      tags: [Expenses]
+      summary: Create a new expense
+      description: Creating an expense automatically updates project.actual_spent via trigger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpense'
+      responses:
+        '201':
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+
+  /expenses/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getExpense
+      tags: [Expenses]
+      summary: Get an expense by ID
+      responses:
+        '200':
+          description: Expense details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+    patch:
+      operationId: updateExpense
+      tags: [Expenses]
+      summary: Update an expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpense'
+      responses:
+        '200':
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+    delete:
+      operationId: deleteExpense
+      tags: [Expenses]
+      summary: Delete an expense
+      responses:
+        '204':
+          description: Expense deleted
+
+  # ============== DOCUMENTS ==============
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [Documents]
+      summary: List documents
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+    post:
+      operationId: createDocument
+      tags: [Documents]
+      summary: Create document metadata
+      description: |
+        Creates the document record. Use `/functions/v1/validate-upload` first to upload
+        the actual file and get the storage URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocument'
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+  /documents/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getDocument
+      tags: [Documents]
+      summary: Get a document by ID
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    patch:
+      operationId: updateDocument
+      tags: [Documents]
+      summary: Update a document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocument'
+      responses:
+        '200':
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    delete:
+      operationId: deleteDocument
+      tags: [Documents]
+      summary: Delete a document
+      responses:
+        '204':
+          description: Document deleted
+
+  # ============== SUPPLIERS ==============
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [Suppliers]
+      summary: List suppliers
+      parameters:
+        - $ref: '#/components/parameters/selectParam'
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+    post:
+      operationId: createSupplier
+      tags: [Suppliers]
+      summary: Create a new supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSupplier'
+      responses:
+        '201':
+          description: Supplier created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+
+  /suppliers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getSupplier
+      tags: [Suppliers]
+      summary: Get a supplier by ID
+      responses:
+        '200':
+          description: Supplier details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+    patch:
+      operationId: updateSupplier
+      tags: [Suppliers]
+      summary: Update a supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSupplier'
+      responses:
+        '200':
+          description: Supplier updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+    delete:
+      operationId: deleteSupplier
+      tags: [Suppliers]
+      summary: Delete a supplier
+      responses:
+        '204':
+          description: Supplier deleted
+
+  # ============== TENANTS ==============
+  /tenants:
+    get:
+      operationId: listTenants
+      tags: [Tenants]
+      summary: List tenants
+      description: Returns tenants the user is a member of
+      responses:
+        '200':
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
+    post:
+      operationId: createTenant
+      tags: [Tenants]
+      summary: Create a new tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenant'
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+
+  /tenants/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getTenant
+      tags: [Tenants]
+      summary: Get a tenant by ID
+      responses:
+        '200':
+          description: Tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+    patch:
+      operationId: updateTenant
+      tags: [Tenants]
+      summary: Update a tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenant'
+      responses:
+        '200':
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+
+  # ============== TEAM MEMBERS ==============
+  /tenant_memberships:
+    get:
+      operationId: listTenantMemberships
+      tags: [Team]
+      summary: List tenant memberships
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of memberships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TenantMembership'
+    post:
+      operationId: createTenantMembership
+      tags: [Team]
+      summary: Create a tenant membership
+      description: Requires manager+ role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantMembership'
+      responses:
+        '201':
+          description: Membership created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantMembership'
+
+  /tenant_memberships_team:
+    get:
+      operationId: listTeamMembers
+      tags: [Team]
+      summary: List team members with profiles
+      description: Returns memberships joined with user profile data
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of team members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMember'
+
+  # ============== PROJECT MEMBERS ==============
+  /project_members:
+    get:
+      operationId: listProjectMembers
+      tags: [Project Members]
+      summary: List project members
+      parameters:
+        - name: project_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: invitation_status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, declined, expired]
+      responses:
+        '200':
+          description: List of project members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectMember'
+    post:
+      operationId: inviteProjectMember
+      tags: [Project Members]
+      summary: Invite a project member
+      description: |
+        Creates an invitation for an external collaborator.
+        Use `/functions/v1/invite-to-project` to send the invitation email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectMember'
+      responses:
+        '201':
+          description: Project member created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+
+  /project_members/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getProjectMember
+      tags: [Project Members]
+      summary: Get a project member by ID
+      responses:
+        '200':
+          description: Project member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+    patch:
+      operationId: updateProjectMember
+      tags: [Project Members]
+      summary: Update a project member
+      description: Update role, access permissions, or invitation status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectMember'
+      responses:
+        '200':
+          description: Project member updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+    delete:
+      operationId: removeProjectMember
+      tags: [Project Members]
+      summary: Remove a project member
+      responses:
+        '204':
+          description: Project member removed
+
+  # ============== USER PROFILES ==============
+  /user_profiles:
+    get:
+      operationId: listUserProfiles
+      tags: [Auth]
+      summary: List user profiles
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of user profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+
+  /user_profiles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getUserProfile
+      tags: [Auth]
+      summary: Get user profile
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    patch:
+      operationId: updateUserProfile
+      tags: [Auth]
+      summary: Update user profile
+      description: Users can only update their own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfile'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  # ============== INVITATIONS (Tenant-level) ==============
+  /invitations:
+    get:
+      operationId: listInvitations
+      tags: [Team]
+      summary: List tenant invitations
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, declined, expired]
+      responses:
+        '200':
+          description: List of invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+    post:
+      operationId: createInvitation
+      tags: [Team]
+      summary: Create a tenant invitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitation'
+      responses:
+        '201':
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+
+  # ============== EDGE FUNCTIONS ==============
+  /functions/v1/invite-to-project:
+    post:
+      operationId: sendProjectInvitation
+      tags: [Project Members]
+      summary: Send project invitation email
+      description: |
+        Sends an email invitation to a project member. The project member record
+        must already exist (created via POST /project_members).
+      servers:
+        - url: https://xcueqjasyxutnkvhhkxj.supabase.co
+          description: Edge Functions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectMemberId
+                - projectId
+              properties:
+                projectMemberId:
+                  type: string
+                  format: uuid
+                projectId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  acceptUrl:
+                    type: string
+                    format: uri
+                  warning:
+                    type: string
+        '400':
+          description: Invalid request
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Project member not found
+
+  /functions/v1/validate-upload:
+    post:
+      operationId: validateAndUploadFile
+      tags: [Documents]
+      summary: Upload and validate a file
+      description: |
+        Server-side file validation and upload. Validates:
+        - File type via magic bytes (PDF, JPEG, PNG, GIF, WebP)
+        - File size (max 10MB)
+        - User has tenant access
+
+        Returns the storage URL to use when creating the document record.
+      servers:
+        - url: https://xcueqjasyxutnkvhhkxj.supabase.co
+          description: Edge Functions
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - projectId
+                - tenantId
+              properties:
+                file:
+                  type: string
+                  format: binary
+                projectId:
+                  type: string
+                  format: uuid
+                tenantId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  path:
+                    type: string
+                  url:
+                    type: string
+                    format: uri
+                  size:
+                    type: integer
+                  type:
+                    type: string
+                  originalName:
+                    type: string
+        '400':
+          description: Invalid file type or size
+        '403':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT token
+    apiKey:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Supabase anon/service key
+
+  parameters:
+    idParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    selectParam:
+      name: select
+      in: query
+      description: Columns to return (PostgREST select)
+      schema:
+        type: string
+        default: '*'
+    orderParam:
+      name: order
+      in: query
+      description: Sort order (e.g., created_at.desc)
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ============== ENUMS ==============
+    ProjectStatus:
+      type: string
+      enum: [planning, in-progress, completed, on-hold]
+
+    StageStatus:
+      type: string
+      enum: [not-started, in-progress, completed]
+
+    StageCategory:
+      type: string
+      enum: [site-work, utilities, structure, interior, exterior, finishing, other]
+
+    TodoStatus:
+      type: string
+      enum: [todo, in-progress, completed, cancelled]
+
+    TodoPriority:
+      type: string
+      enum: [low, medium, high, urgent]
+
+    ExpenseStatus:
+      type: string
+      enum: [pending, paid]
+
+    DocumentType:
+      type: string
+      enum: [permit, contract, invoice, plan, photo, warranty, financing, other]
+
+    UserRole:
+      type: string
+      enum: [owner, admin, manager, contractor, viewer]
+
+    InvitationStatus:
+      type: string
+      enum: [pending, accepted, declined, expired]
+
+    # ============== ERROR ==============
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        hint:
+          type: string
+
+    # ============== TENANT ==============
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        logo_url:
+          type: string
+          format: uri
+        settings:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateTenant:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+        description:
+          type: string
+        logo_url:
+          type: string
+          format: uri
+
+    UpdateTenant:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        logo_url:
+          type: string
+          format: uri
+        settings:
+          type: object
+
+    # ============== PROJECT ==============
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        start_date:
+          type: string
+          format: date
+        target_completion_date:
+          type: string
+          format: date
+        total_budget:
+          type: number
+          format: double
+        actual_spent:
+          type: number
+          format: double
+          readOnly: true
+          description: Auto-calculated from expenses
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        project_managers:
+          type: array
+          items:
+            type: string
+            format: uuid
+        contractors:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateProject:
+      type: object
+      required: [tenant_id, name]
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        address:
+          type: string
+        start_date:
+          type: string
+          format: date
+        target_completion_date:
+          type: string
+          format: date
+        total_budget:
+          type: number
+          format: double
+          minimum: 0
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+          default: planning
+
+    UpdateProject:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        start_date:
+          type: string
+          format: date
+        target_completion_date:
+          type: string
+          format: date
+        total_budget:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        project_managers:
+          type: array
+          items:
+            type: string
+            format: uuid
+        contractors:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ============== STAGE ==============
+    Stage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/StageStatus'
+        category:
+          $ref: '#/components/schemas/StageCategory'
+        planned_start_date:
+          type: string
+          format: date
+        planned_end_date:
+          type: string
+          format: date
+        actual_start_date:
+          type: string
+          format: date
+        actual_end_date:
+          type: string
+          format: date
+        estimated_cost:
+          type: number
+          format: double
+        actual_cost:
+          type: number
+          format: double
+        assigned_suppliers:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dependencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateStage:
+      type: object
+      required: [project_id, tenant_id, name]
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/StageStatus'
+          default: not-started
+        category:
+          $ref: '#/components/schemas/StageCategory'
+          default: other
+        planned_start_date:
+          type: string
+          format: date
+        planned_end_date:
+          type: string
+          format: date
+        estimated_cost:
+          type: number
+          format: double
+        assigned_suppliers:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dependencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdateStage:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/StageStatus'
+        category:
+          $ref: '#/components/schemas/StageCategory'
+        planned_start_date:
+          type: string
+          format: date
+        planned_end_date:
+          type: string
+          format: date
+        actual_start_date:
+          type: string
+          format: date
+        actual_end_date:
+          type: string
+          format: date
+        estimated_cost:
+          type: number
+          format: double
+        actual_cost:
+          type: number
+          format: double
+        assigned_suppliers:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dependencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+
+    # ============== TODO ==============
+    Todo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TodoPriority'
+        status:
+          $ref: '#/components/schemas/TodoStatus'
+        due_date:
+          type: string
+          format: date
+        created_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+        is_completed:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        assignedToUser:
+          $ref: '#/components/schemas/UserProfile'
+        createdByUser:
+          $ref: '#/components/schemas/UserProfile'
+
+    CreateTodo:
+      type: object
+      required: [tenant_id, project_id, title]
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TodoPriority'
+          default: medium
+        status:
+          $ref: '#/components/schemas/TodoStatus'
+          default: todo
+        due_date:
+          type: string
+          format: date
+        assigned_to:
+          type: string
+          format: uuid
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+
+    UpdateTodo:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TodoPriority'
+        status:
+          $ref: '#/components/schemas/TodoStatus'
+        due_date:
+          type: string
+          format: date
+        assigned_to:
+          type: string
+          format: uuid
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+        is_completed:
+          type: boolean
+
+    # ============== EXPENSE ==============
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        amount:
+          type: number
+          format: double
+        category:
+          type: string
+        stage_id:
+          type: string
+          format: uuid
+        supplier_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        receipt_url:
+          type: string
+          format: uri
+        status:
+          $ref: '#/components/schemas/ExpenseStatus'
+        payment_method:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateExpense:
+      type: object
+      required: [project_id, tenant_id, date, amount, category]
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        amount:
+          type: number
+          format: double
+          minimum: 0
+        category:
+          type: string
+          maxLength: 100
+        stage_id:
+          type: string
+          format: uuid
+        supplier_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        receipt_url:
+          type: string
+          format: uri
+        status:
+          $ref: '#/components/schemas/ExpenseStatus'
+          default: pending
+        payment_method:
+          type: string
+
+    UpdateExpense:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        amount:
+          type: number
+          format: double
+        category:
+          type: string
+        stage_id:
+          type: string
+          format: uuid
+        supplier_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        receipt_url:
+          type: string
+          format: uri
+        status:
+          $ref: '#/components/schemas/ExpenseStatus'
+        payment_method:
+          type: string
+
+    # ============== DOCUMENT ==============
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        category:
+          type: string
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        supplier_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        upload_date:
+          type: string
+          format: date
+        size:
+          type: integer
+          description: File size in bytes
+        url:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+        uploaded_by:
+          type: string
+          format: uuid
+
+    CreateDocument:
+      type: object
+      required: [project_id, tenant_id, name, type, url]
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        category:
+          type: string
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        supplier_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        size:
+          type: integer
+        url:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    UpdateDocument:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        category:
+          type: string
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        supplier_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    # ============== SUPPLIER ==============
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        specialty:
+          type: string
+        contract_value:
+          type: number
+          format: double
+        payment_terms:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+        is_active:
+          type: boolean
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateSupplier:
+      type: object
+      required: [project_id, tenant_id, name]
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        specialty:
+          type: string
+        contract_value:
+          type: number
+          format: double
+        payment_terms:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        is_active:
+          type: boolean
+          default: true
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdateSupplier:
+      type: object
+      properties:
+        name:
+          type: string
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+        specialty:
+          type: string
+        contract_value:
+          type: number
+          format: double
+        payment_terms:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+        is_active:
+          type: boolean
+        stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ============== USER PROFILE ==============
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        phone:
+          type: string
+        timezone:
+          type: string
+        preferences:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateUserProfile:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        avatar_url:
+          type: string
+          format: uri
+        phone:
+          type: string
+        timezone:
+          type: string
+        preferences:
+          type: object
+
+    # ============== TENANT MEMBERSHIP ==============
+    TenantMembership:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permissions:
+          type: object
+        is_active:
+          type: boolean
+        joined_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    CreateTenantMembership:
+      type: object
+      required: [tenant_id, user_id, role]
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permissions:
+          type: object
+        is_active:
+          type: boolean
+          default: true
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        is_active:
+          type: boolean
+        joined_at:
+          type: string
+          format: date-time
+        first_name:
+          type: string
+        last_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        email:
+          type: string
+          format: email
+
+    # ============== PROJECT MEMBER ==============
+    ProjectMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        allowed_stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Explicit stage access list (mutually exclusive with linked_supplier_id)
+        linked_supplier_id:
+          type: string
+          format: uuid
+          description: Dynamic stage access via supplier (mutually exclusive with allowed_stage_ids)
+        invitation_email:
+          type: string
+          format: email
+        invitation_token:
+          type: string
+          format: uuid
+        invitation_status:
+          $ref: '#/components/schemas/InvitationStatus'
+        invited_by:
+          type: string
+          format: uuid
+        accepted_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user_profiles:
+          $ref: '#/components/schemas/UserProfile'
+        suppliers:
+          $ref: '#/components/schemas/Supplier'
+
+    CreateProjectMember:
+      type: object
+      required: [project_id, invitation_email, role]
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        invitation_email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        allowed_stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        linked_supplier_id:
+          type: string
+          format: uuid
+
+    UpdateProjectMember:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+        allowed_stage_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        linked_supplier_id:
+          type: string
+          format: uuid
+        invitation_status:
+          $ref: '#/components/schemas/InvitationStatus'
+
+    # ============== INVITATION (Tenant-level) ==============
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permissions:
+          type: object
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        invited_by:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        accepted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    CreateInvitation:
+      type: object
+      required: [tenant_id, email, role]
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permissions:
+          type: object
