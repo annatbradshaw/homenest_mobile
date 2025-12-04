@@ -25,7 +25,9 @@
       "config": {
         "usesNonExemptEncryption": false
       },
-      "associatedDomains": ["applinks:homenest.app"]
+      "associatedDomains": [
+        "applinks:homenest.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -36,9 +38,10 @@
       "package": "com.homenest.app",
       "versionCode": 1,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ],
       "intentFilters": [
         {
@@ -51,7 +54,10 @@
               "pathPrefix": "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -85,20 +91,20 @@
     },
     "extra": {
       "router": {
-        "origin": false
+        "origin": false,
+        "root": "./src/app"
       },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "275075db-7eb6-4f19-a34c-772bb5b9a3ac"
       }
     },
     "experiments": {
       "typedRoutes": true
     },
-    "updates": {
-      "url": "https://u.expo.dev/your-project-id"
-    },
+    "updates": {},
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "owner": "anna.t.bradshaw"
   }
 }
