@@ -9,14 +9,12 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  TextInput,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock } from 'lucide-react-native';
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
-import { Button, Input } from '../../components/ui';
 import { colors, typography, spacing } from '../../config/theme';
 
 export default function LoginScreen() {
@@ -25,32 +23,16 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-
-  const validate = () => {
-    const newErrors: { email?: string; password?: string } = {};
-
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleLogin = async () => {
-    if (!validate()) return;
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
     setLoading(true);
     try {
       const { error } = await signIn(email, password);
-
       if (error) {
         Alert.alert('Login Failed', error.message);
       } else {
@@ -65,21 +47,6 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      {/* Decorative gradient background */}
-      <LinearGradient
-        colors={isDark
-          ? [colors.primary[900], 'transparent']
-          : [colors.primary[100], 'transparent']
-        }
-        style={styles.gradientBackground}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
-
-      {/* Decorative circles */}
-      <View style={[styles.decorativeCircle1, isDark && styles.decorativeCircleDark]} />
-      <View style={[styles.decorativeCircle2, isDark && styles.decorativeCircleDark]} />
-
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -90,61 +57,70 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo/Brand */}
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require('../../../main_logo_transparent.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                  tintColor={isDark ? '#FFFFFF' : undefined}
-                />
-              </View>
-              <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
-                Welcome back! Sign in to continue.
-              </Text>
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../../main_logo_transparent.png')}
+                style={styles.logo}
+                resizeMode="contain"
+                tintColor={isDark ? '#FFFFFF' : undefined}
+              />
             </View>
 
             {/* Form */}
             <View style={styles.form}>
-              <View style={[styles.formCard, isDark && styles.formCardDark]}>
-                <Input
-                  label="Email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  error={errors.email}
-                  leftIcon={<Mail size={20} color={colors.neutral[400]} />}
-                />
+              <TextInput
+                style={[
+                  styles.input,
+                  isDark && styles.inputDark,
+                ]}
+                placeholder="Email"
+                placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
 
-                <Input
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoComplete="password"
-                  error={errors.password}
-                  leftIcon={<Lock size={20} color={colors.neutral[400]} />}
-                />
+              <TextInput
+                style={[
+                  styles.input,
+                  isDark && styles.inputDark,
+                ]}
+                placeholder="Password"
+                placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="password"
+              />
 
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? 'Signing in...' : 'Log In'}
+                </Text>
+              </TouchableOpacity>
+
+              <Link href="/(auth)/forgot-password" asChild>
                 <TouchableOpacity style={styles.forgotPassword}>
-                  <Link href="/(auth)/forgot-password" asChild>
-                    <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-                  </Link>
+                  <Text style={[styles.forgotPasswordText, isDark && styles.forgotPasswordTextDark]}>
+                    Forgot password?
+                  </Text>
                 </TouchableOpacity>
+              </Link>
+            </View>
 
-                <Button
-                  title="Sign In"
-                  onPress={handleLogin}
-                  loading={loading}
-                  fullWidth
-                  size="lg"
-                />
-              </View>
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={[styles.divider, isDark && styles.dividerDark]} />
+              <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>OR</Text>
+              <View style={[styles.divider, isDark && styles.dividerDark]} />
             </View>
 
             {/* Sign up link */}
@@ -168,40 +144,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
   containerDark: {
-    backgroundColor: colors.neutral[900],
-  },
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-  },
-  decorativeCircle1: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.primary[100],
-    opacity: 0.5,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    top: 100,
-    left: -80,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: colors.accent[100],
-    opacity: 0.3,
-  },
-  decorativeCircleDark: {
-    opacity: 0.1,
+    backgroundColor: '#000000',
   },
   safeArea: {
     flex: 1,
@@ -211,54 +157,84 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: spacing[6],
+    paddingHorizontal: 32,
     justifyContent: 'center',
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing[8],
-  },
   logoContainer: {
-    marginBottom: spacing[4],
+    alignItems: 'center',
+    marginBottom: 40,
   },
   logo: {
-    width: 180,
-    height: 50,
-  },
-  subtitle: {
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[500],
-    textAlign: 'center',
-  },
-  subtitleDark: {
-    color: colors.neutral[400],
+    width: 200,
+    height: 56,
   },
   form: {
-    marginBottom: spacing[6],
+    gap: 12,
   },
-  formCard: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: spacing[5],
-    shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+  input: {
+    height: 50,
+    backgroundColor: '#FAFAFA',
+    borderWidth: 1,
+    borderColor: '#DBDBDB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#262626',
   },
-  formCardDark: {
-    backgroundColor: colors.neutral[800],
-    shadowOpacity: 0.3,
+  inputDark: {
+    backgroundColor: '#262626',
+    borderColor: '#363636',
+    color: '#FAFAFA',
+  },
+  button: {
+    height: 50,
+    backgroundColor: colors.primary[600],
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing[5],
-    marginTop: -spacing[1],
+    alignItems: 'center',
+    paddingVertical: 16,
   },
   forgotPasswordText: {
-    fontSize: typography.fontSize.sm,
     color: colors.primary[600],
-    fontWeight: typography.fontWeight.medium,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  forgotPasswordTextDark: {
+    color: colors.primary[400],
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#DBDBDB',
+  },
+  dividerDark: {
+    backgroundColor: '#363636',
+  },
+  dividerText: {
+    paddingHorizontal: 16,
+    color: '#8E8E8E',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dividerTextDark: {
+    color: '#A8A8A8',
   },
   footer: {
     flexDirection: 'row',
@@ -266,15 +242,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[600],
+    fontSize: 14,
+    color: '#262626',
   },
   footerTextDark: {
-    color: colors.neutral[400],
+    color: '#FAFAFA',
   },
   footerLink: {
-    fontSize: typography.fontSize.base,
+    fontSize: 14,
     color: colors.primary[600],
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: '600',
   },
 });
