@@ -9,6 +9,16 @@ export type StageCategory = 'site-work' | 'utilities' | 'structure' | 'interior'
 export type TodoPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TodoStatus = 'todo' | 'in-progress' | 'completed' | 'cancelled';
 export type ExpenseStatus = 'pending' | 'paid';
+
+// Notification enums
+export type NotificationStatus = 'pending' | 'sent' | 'failed';
+export type NotificationChannel = 'push' | 'email';
+export type NotificationType =
+  | 'todo_due_reminder'
+  | 'stage_starting'
+  | 'stage_completed'
+  | 'budget_warning'
+  | 'budget_exceeded';
 export type DocumentType = 'permit' | 'contract' | 'invoice' | 'plan' | 'photo' | 'warranty' | 'financing' | 'other';
 export type MemberRole = 'owner' | 'admin' | 'manager' | 'contractor' | 'viewer';
 export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
@@ -193,6 +203,30 @@ export interface Invitation extends Timestamps {
   invited_by: UUID;
   expires_at: string;
   accepted_at?: string;
+}
+
+export interface PushToken extends Timestamps {
+  id: UUID;
+  user_id: UUID;
+  token: string;
+  platform: 'ios' | 'android';
+  is_active: boolean;
+}
+
+export interface Notification {
+  id: UUID;
+  user_id: UUID;
+  type: NotificationType;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  channel: NotificationChannel;
+  status: NotificationStatus;
+  sent_at?: string;
+  error_message?: string;
+  related_type?: string;
+  related_id?: UUID;
+  created_at: string;
 }
 
 // API Request/Response types

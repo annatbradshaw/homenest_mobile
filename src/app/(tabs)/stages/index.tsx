@@ -1138,7 +1138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: themeColors.neutral[100],
-    borderRadius: 16,
+    borderRadius: 6,
     paddingVertical: 6,
     paddingLeft: 12,
     paddingRight: 8,

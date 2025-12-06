@@ -143,6 +143,18 @@ export default function TaskDetailScreen() {
   };
 
   const getStatusStyle = (status: TodoStatus) => {
+    if (isDark) {
+      switch (status) {
+        case 'completed':
+          return { bg: `${colors.success[500]}25`, text: colors.success[400] };
+        case 'in-progress':
+          return { bg: `${colors.primary[500]}25`, text: colors.primary[400] };
+        case 'cancelled':
+          return { bg: colors.neutral[800], text: colors.neutral[500] };
+        default:
+          return { bg: colors.neutral[800], text: colors.neutral[400] };
+      }
+    }
     switch (status) {
       case 'completed':
         return { bg: colors.success[50], text: colors.success[600] };
@@ -243,18 +255,21 @@ export default function TaskDetailScreen() {
                   style={[
                     styles.statusOption,
                     { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] },
-                    isActive && styles.statusOptionActive
+                    isActive && {
+                      backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
+                      borderColor: isDark ? colors.primary[600] : colors.primary[300]
+                    }
                   ]}
                   onPress={() => handleStatusChange(option.value)}
                 >
                   <Icon
                     size={16}
-                    color={isActive ? colors.primary[600] : colors.neutral[400]}
+                    color={isActive ? (isDark ? colors.primary[400] : colors.primary[600]) : colors.neutral[400]}
                   />
                   <Text style={[
                     styles.statusOptionText,
                     { color: isDark ? colors.neutral[300] : colors.neutral[600] },
-                    isActive && styles.statusOptionTextActive
+                    isActive && { color: isDark ? colors.primary[400] : colors.primary[700] }
                   ]} numberOfLines={1}>
                     {option.label}
                   </Text>
@@ -276,7 +291,10 @@ export default function TaskDetailScreen() {
                   style={[
                     styles.priorityOption,
                     { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] },
-                    isActive && styles.priorityOptionActive
+                    isActive && {
+                      backgroundColor: isDark ? colors.neutral[700] : colors.neutral[50],
+                      borderColor: isDark ? colors.neutral[500] : colors.neutral[400]
+                    }
                   ]}
                   onPress={() => handlePriorityChange(option.value)}
                 >
@@ -284,7 +302,7 @@ export default function TaskDetailScreen() {
                   <Text style={[
                     styles.priorityOptionText,
                     { color: isDark ? colors.neutral[300] : colors.neutral[600] },
-                    isActive && styles.priorityOptionTextActive
+                    isActive && { color: isDark ? colors.neutral[100] : colors.neutral[900], fontWeight: '600' }
                   ]}>
                     {option.label}
                   </Text>
@@ -352,9 +370,15 @@ export default function TaskDetailScreen() {
             <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.tags')}</Text>
             <View style={styles.tagsContainer}>
               {task.tags.map((tag) => (
-                <View key={tag} style={styles.tag}>
-                  <Tag size={12} color={colors.primary[600]} />
-                  <Text style={styles.tagText}>#{tag}</Text>
+                <View key={tag} style={[
+                  styles.tag,
+                  {
+                    backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
+                    borderColor: isDark ? colors.primary[700] : colors.primary[200]
+                  }
+                ]}>
+                  <Tag size={12} color={isDark ? colors.primary[400] : colors.primary[600]} />
+                  <Text style={[styles.tagText, { color: isDark ? colors.primary[400] : colors.primary[700] }]}>#{tag}</Text>
                 </View>
               ))}
             </View>
@@ -363,9 +387,9 @@ export default function TaskDetailScreen() {
 
         {/* Delete Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? colors.danger[900] : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
-            <Trash2 size={18} color={colors.danger[600]} />
-            <Text style={styles.deleteButtonText}>{t('todos.deleteTask')}</Text>
+          <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? `${colors.danger[500]}15` : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
+            <Trash2 size={18} color={isDark ? colors.danger[400] : colors.danger[600]} />
+            <Text style={[styles.deleteButtonText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('todos.deleteTask')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -475,7 +499,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
   },
   statusText: {
     fontSize: 14,
@@ -487,7 +511,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     backgroundColor: themeColors.neutral[100],
   },
   priorityDot: {
@@ -604,7 +628,7 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.primary[50],
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: themeColors.primary[200],
   },

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-import { UserPreferences, DEFAULT_PREFERENCES } from '../types/preferences';
+import { UserPreferences, DEFAULT_PREFERENCES, migrateNotificationPreferences } from '../types/preferences';
 import { getLocales } from 'expo-localization';
 
 const PREFERENCES_STORAGE_KEY = '@homenest_preferences';
@@ -103,10 +103,27 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
       if (data?.preferences) {
         const dbPrefs = data.preferences as Partial<UserPreferences>;
-        const merged = { ...DEFAULT_PREFERENCES, ...getDeviceDefaults(), ...dbPrefs };
+        // Migrate notification preferences from legacy format if needed
+        const notifications = migrateNotificationPreferences(
+          dbPrefs.notifications as Record<string, unknown> | undefined
+        );
+        const merged = {
+          ...DEFAULT_PREFERENCES,
+          ...getDeviceDefaults(),
+          ...dbPrefs,
+          notifications,
+        };
         setPreferences(merged);
         // Update local cache
         await AsyncStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(merged));
+
+        // If migration happened, save updated preferences back to DB
+        if (dbPrefs.notifications && !('pushEnabled' in dbPrefs.notifications)) {
+          await supabase
+            .from('user_profiles')
+            .update({ preferences: merged })
+            .eq('id', uid);
+        }
       }
     } catch (error) {
       console.error('Failed to load preferences from DB:', error);

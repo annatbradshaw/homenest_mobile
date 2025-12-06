@@ -19,6 +19,7 @@ import {
   Plus,
   Layers,
   DollarSign,
+  Loader2,
 } from 'lucide-react-native';
 import { useProject } from '../../stores/ProjectContext';
 import { useTheme } from '../../stores/ThemeContext';
@@ -74,8 +75,59 @@ export default function DashboardScreen() {
 
   const activeStage = useMemo(() => {
     if (!stages) return null;
-    return stages.find(s => s.status === 'in-progress') || stages.find(s => s.status === 'not-started');
+    return stages.find(s => s.status === 'in-progress');
   }, [stages]);
+
+  // Upcoming stages - not started and planned to start within 2 weeks
+  const upcomingStages = useMemo(() => {
+    if (!stages) return [];
+    const now = new Date();
+    const twoWeeksFromNow = new Date();
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+
+    return stages
+      .filter(s => s.status === 'not-started' && s.planned_start_date)
+      .filter(s => {
+        const startDate = new Date(s.planned_start_date!);
+        return startDate >= now && startDate <= twoWeeksFromNow;
+      })
+      .sort((a, b) => new Date(a.planned_start_date!).getTime() - new Date(b.planned_start_date!).getTime())
+      .slice(0, 3);
+  }, [stages]);
+
+  // Helper to check if stage is running late
+  const isStageRunningLate = (stage: { planned_end_date?: string | null; status: string }): boolean => {
+    if (!stage.planned_end_date || stage.status !== 'in-progress') return false;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const endDate = new Date(stage.planned_end_date);
+    endDate.setHours(0, 0, 0, 0);
+    return now > endDate;
+  };
+
+  // Helper to check if stage end is approaching (within 3 days)
+  const isStageEndingSoon = (stage: { planned_end_date?: string | null; status: string }): boolean => {
+    if (!stage.planned_end_date || stage.status !== 'in-progress') return false;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const endDate = new Date(stage.planned_end_date);
+    endDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 3;
+  };
+
+  // Helper to get due date status
+  const getDueDateStatus = (dueDate: string | null | undefined): 'overdue' | 'soon' | 'normal' | null => {
+    if (!dueDate) return null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return 'overdue';
+    if (diffDays <= 2) return 'soon';
+    return 'normal';
+  };
 
   if (!currentProject) {
     return (
@@ -246,23 +298,43 @@ export default function DashboardScreen() {
               <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
                 {t('dashboard.currentStage')}
               </Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/stages')} style={styles.seeAllBtn}>
+                <Text style={[styles.seeAllText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+                  {t('dashboard.seeAll')}
+                </Text>
+                <ArrowUpRight size={14} color={isDark ? colors.neutral[400] : colors.neutral[500]} />
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={[
                 styles.stageCard,
                 {
                   backgroundColor: isDark ? colors.neutral[800] : '#fff',
-                  borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+                  borderColor: isStageRunningLate(activeStage)
+                    ? colors.danger[400]
+                    : isDark ? colors.neutral[700] : colors.neutral[200],
                 }
               ]}
-              onPress={() => router.push('/(tabs)/stages')}
+              onPress={() => router.push(`/(tabs)/stages/${activeStage.id}`)}
             >
               <View style={styles.stageInfo}>
-                <Text style={[styles.stageName, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                  {activeStage.name}
-                </Text>
+                <View style={styles.stageNameRow}>
+                  <Text style={[styles.stageName, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
+                    {activeStage.name}
+                  </Text>
+                  {isStageRunningLate(activeStage) && (
+                    <View style={[styles.stageBadge, { backgroundColor: isDark ? `${colors.danger[500]}25` : colors.danger[100] }]}>
+                      <Text style={[styles.stageBadgeText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('dashboard.runningLate')}</Text>
+                    </View>
+                  )}
+                  {!isStageRunningLate(activeStage) && isStageEndingSoon(activeStage) && (
+                    <View style={[styles.stageBadge, { backgroundColor: isDark ? `${colors.accent[500]}25` : colors.accent[100] }]}>
+                      <Text style={[styles.stageBadgeText, { color: isDark ? colors.accent[400] : colors.accent[600] }]}>{t('dashboard.endingSoon')}</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={[styles.stageStatus, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                  {activeStage.status === 'in-progress' ? t('dashboard.inProgress') : t('dashboard.upNext')}
+                  {t('dashboard.inProgress')}
                 </Text>
               </View>
               <ChevronRight size={20} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
@@ -270,8 +342,54 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Recent Tasks */}
-        {todos && todos.length > 0 && (
+        {/* Upcoming Stages */}
+        {upcomingStages.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+                {t('dashboard.upcomingStages')}
+              </Text>
+            </View>
+            <View style={[
+              styles.taskList,
+              {
+                backgroundColor: isDark ? colors.neutral[800] : '#fff',
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+              }
+            ]}>
+              {upcomingStages.map((stage) => (
+                <TouchableOpacity
+                  key={stage.id}
+                  style={[
+                    styles.taskItem,
+                    { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }
+                  ]}
+                  onPress={() => router.push(`/(tabs)/stages/${stage.id}`)}
+                  activeOpacity={0.7}
+                >
+                  <Layers size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
+                  <View style={styles.taskContent}>
+                    <Text
+                      style={[
+                        styles.taskText,
+                        { color: isDark ? colors.neutral[50] : colors.neutral[900] },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {stage.name}
+                    </Text>
+                  </View>
+                  <Text style={[styles.upcomingDate, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+                    {stage.planned_start_date ? new Date(stage.planned_start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Recent Tasks - Show only active tasks (todo or in-progress) */}
+        {todos && todos.filter(t => t.status === 'todo' || t.status === 'in-progress').length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
@@ -292,31 +410,54 @@ export default function DashboardScreen() {
                 borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
               }
             ]}>
-              {todos.slice(0, 5).map((task) => (
-                <View
-                  key={task.id}
-                  style={[
-                    styles.taskItem,
-                    { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }
-                  ]}
-                >
-                  {task.status === 'completed' ? (
-                    <CheckCircle2 size={18} color={colors.success[500]} />
-                  ) : (
-                    <Circle size={18} color={isDark ? colors.neutral[600] : colors.neutral[300]} />
-                  )}
-                  <Text
-                    style={[
-                      styles.taskText,
-                      { color: isDark ? colors.neutral[50] : colors.neutral[900] },
-                      task.status === 'completed' && { color: isDark ? colors.neutral[500] : colors.neutral[400], textDecorationLine: 'line-through' }
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {task.title}
-                  </Text>
-                </View>
-              ))}
+              {todos
+                .filter((task) => task.status === 'todo' || task.status === 'in-progress')
+                .slice(0, 5)
+                .map((task) => {
+                  const dueStatus = getDueDateStatus(task.due_date);
+                  return (
+                    <TouchableOpacity
+                      key={task.id}
+                      style={[
+                        styles.taskItem,
+                        { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }
+                      ]}
+                      onPress={() => router.push(`/(tabs)/todos/${task.id}`)}
+                      activeOpacity={0.7}
+                    >
+                      {task.status === 'in-progress' ? (
+                        <View style={[styles.statusIconContainer, { backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50] }]}>
+                          <Loader2 size={14} color={colors.primary[500]} />
+                        </View>
+                      ) : (
+                        <View style={[styles.statusIconContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+                          <Circle size={14} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
+                        </View>
+                      )}
+                      <View style={styles.taskContent}>
+                        <Text
+                          style={[
+                            styles.taskText,
+                            { color: isDark ? colors.neutral[50] : colors.neutral[900] },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {task.title}
+                        </Text>
+                      </View>
+                      {dueStatus === 'overdue' && (
+                        <View style={[styles.dueBadge, { backgroundColor: isDark ? `${colors.danger[500]}25` : colors.danger[100] }]}>
+                          <Text style={[styles.dueBadgeText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('dashboard.overdue')}</Text>
+                        </View>
+                      )}
+                      {dueStatus === 'soon' && (
+                        <View style={[styles.dueBadge, { backgroundColor: isDark ? `${colors.accent[500]}25` : colors.accent[100] }]}>
+                          <Text style={[styles.dueBadgeText, { color: isDark ? colors.accent[400] : colors.accent[600] }]}>{t('dashboard.dueSoon')}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
             </View>
           </View>
         )}
@@ -525,6 +666,27 @@ const styles = StyleSheet.create({
   stageStatus: {
     fontSize: 14,
   },
+  stageNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  stageBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  stageBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  upcomingDate: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
   taskList: {
     borderRadius: 12,
     borderWidth: 1,
@@ -539,7 +701,27 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   taskText: {
-    flex: 1,
     fontSize: 15,
+  },
+  taskContent: {
+    flex: 1,
+  },
+  dueBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  dueBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statusIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

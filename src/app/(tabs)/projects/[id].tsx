@@ -283,33 +283,39 @@ export default function ProjectDetailScreen() {
               .filter((t) => !t.is_completed)
               .slice(0, 3)
               .map((todo) => (
-                <Card key={todo.id} variant="default" style={[styles.todoCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
-                  <View style={styles.todoRow}>
-                    <View
-                      style={[
-                        styles.todoPriority,
-                        {
-                          backgroundColor:
-                            todo.priority === 'urgent'
-                              ? colors.danger[500]
-                              : todo.priority === 'high'
-                              ? colors.accent[500]
-                              : todo.priority === 'medium'
-                              ? colors.primary[500]
-                              : colors.neutral[400],
-                        },
-                      ]}
-                    />
-                    <View style={styles.todoInfo}>
-                      <Text style={[styles.todoTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{todo.title}</Text>
-                      {todo.due_date && (
-                        <Text style={[styles.todoDue, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                          {t('projects.due')} {formatDate(todo.due_date, 'short')}
-                        </Text>
-                      )}
+                <TouchableOpacity
+                  key={todo.id}
+                  onPress={() => router.push(`/(tabs)/todos/${todo.id}`)}
+                  activeOpacity={0.7}
+                >
+                  <Card variant="default" style={[styles.todoCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+                    <View style={styles.todoRow}>
+                      <View
+                        style={[
+                          styles.todoPriority,
+                          {
+                            backgroundColor:
+                              todo.priority === 'urgent'
+                                ? colors.danger[500]
+                                : todo.priority === 'high'
+                                ? colors.accent[500]
+                                : todo.priority === 'medium'
+                                ? colors.primary[500]
+                                : colors.neutral[400],
+                          },
+                        ]}
+                      />
+                      <View style={styles.todoInfo}>
+                        <Text style={[styles.todoTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{todo.title}</Text>
+                        {todo.due_date && (
+                          <Text style={[styles.todoDue, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+                            {t('projects.due')} {formatDate(todo.due_date, 'short')}
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                </Card>
+                  </Card>
+                </TouchableOpacity>
               ))}
           </View>
         )}

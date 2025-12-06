@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: themeColors.primary[50],
-    borderRadius: 20,
+    borderRadius: 6,
   },
   changePhotoText: {
     fontSize: 14,

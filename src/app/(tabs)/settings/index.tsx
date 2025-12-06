@@ -51,7 +51,7 @@ function SettingItem({
       <View style={[
         styles.settingIcon,
         { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] },
-        danger && { backgroundColor: isDark ? colors.danger[900] : colors.danger[50] },
+        danger && { backgroundColor: isDark ? `${colors.danger[500]}25` : colors.danger[50] },
       ]}>
         {icon}
       </View>

@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronDown, ChevronRight, ChevronLeft, ListTodo, Plus, X, Calendar, Check } from 'lucide-react-native';
+import { ChevronRight, ChevronLeft, ListTodo, Plus, X, Calendar, Check } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useProject } from '../../../stores/ProjectContext';
 import { useTodos, useUpdateTodo, useCreateTodo } from '../../../hooks/useTodos';
@@ -241,6 +241,19 @@ export default function TodosScreen() {
       inProgress: todos.filter(t => t.status === 'in-progress').length,
     };
   }, [todos]);
+
+  // Helper to get due date status
+  const getDueDateStatus = (dueDate: string | null | undefined): 'overdue' | 'soon' | 'normal' | null => {
+    if (!dueDate) return null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return 'overdue';
+    if (diffDays <= 2) return 'soon';
+    return 'normal';
+  };
 
   // Get selected assignee name
   const selectedAssigneeName = useMemo(() => {
@@ -502,10 +515,17 @@ export default function TodosScreen() {
           {selectedStagesNames.length > 0 && (
             <View style={styles.selectedChips}>
               {selectedStagesNames.map((name, idx) => (
-                <View key={idx} style={[styles.chip, styles.chipAmber]}>
-                  <Text style={[styles.chipText, styles.chipTextAmber]} numberOfLines={1}>{name}</Text>
+                <View key={idx} style={[
+                  styles.chip,
+                  {
+                    backgroundColor: isDark ? `${colors.accent[500]}20` : colors.accent[50],
+                    borderColor: isDark ? colors.accent[700] : colors.accent[200],
+                    borderWidth: 1,
+                  }
+                ]}>
+                  <Text style={[styles.chipText, { color: isDark ? colors.accent[400] : colors.accent[700] }]} numberOfLines={1}>{name}</Text>
                   <TouchableOpacity onPress={() => handleStageToggle(formData.stage_ids[idx])}>
-                    <X size={14} color={colors.accent[600]} />
+                    <X size={14} color={isDark ? colors.accent[400] : colors.accent[600]} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -535,10 +555,17 @@ export default function TodosScreen() {
           {formData.tags.length > 0 && (
             <View style={styles.selectedChips}>
               {formData.tags.map((tag) => (
-                <View key={tag} style={[styles.chip, styles.chipBlue]}>
-                  <Text style={[styles.chipText, styles.chipTextBlue]}>#{tag}</Text>
+                <View key={tag} style={[
+                  styles.chip,
+                  {
+                    backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
+                    borderColor: isDark ? colors.primary[700] : colors.primary[200],
+                    borderWidth: 1,
+                  }
+                ]}>
+                  <Text style={[styles.chipText, { color: isDark ? colors.primary[400] : colors.primary[700] }]}>#{tag}</Text>
                   <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                    <X size={14} color={colors.primary[600]} />
+                    <X size={14} color={isDark ? colors.primary[400] : colors.primary[600]} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -635,7 +662,10 @@ export default function TodosScreen() {
             backgroundColor: isDark ? colors.neutral[800] : '#fff',
             borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
           }]}>
-            {sortedTodos.map((task) => (
+            {sortedTodos.map((task) => {
+              const dueStatus = getDueDateStatus(task.due_date);
+              const showDueBadge = dueStatus && dueStatus !== 'normal' && task.status !== 'completed' && task.status !== 'cancelled';
+              return (
               <TouchableOpacity
                 key={task.id}
                 style={[styles.taskItem, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }]}
@@ -655,7 +685,17 @@ export default function TodosScreen() {
                   </Text>
                   <View style={styles.taskMeta}>
                     <View style={[styles.priorityDot, { backgroundColor: getPriorityColor(task.priority) }]} />
-                    <Text style={[styles.priorityText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{task.priority}</Text>
+                    <Text style={[styles.priorityText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t(`todos.priorities.${task.priority}`)}</Text>
+                    {showDueBadge && dueStatus === 'overdue' && (
+                      <View style={[styles.dueBadge, { backgroundColor: isDark ? `${colors.danger[500]}25` : colors.danger[100] }]}>
+                        <Text style={[styles.dueBadgeText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('todos.overdue')}</Text>
+                      </View>
+                    )}
+                    {showDueBadge && dueStatus === 'soon' && (
+                      <View style={[styles.dueBadge, { backgroundColor: isDark ? `${colors.accent[500]}25` : colors.accent[100] }]}>
+                        <Text style={[styles.dueBadgeText, { color: isDark ? colors.accent[400] : colors.accent[600] }]}>{t('todos.dueSoon')}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
@@ -699,21 +739,10 @@ export default function TodosScreen() {
                   >
                     {getStatusLabel(task.status)}
                   </Text>
-                  <ChevronDown
-                    size={12}
-                    color={
-                      task.status === 'in-progress'
-                        ? isDark ? themeColors.primary[400] : themeColors.primary[600]
-                        : task.status === 'completed'
-                        ? isDark ? themeColors.success[400] : themeColors.success[600]
-                        : task.status === 'cancelled'
-                        ? isDark ? colors.neutral[400] : themeColors.neutral[500]
-                        : isDark ? colors.neutral[300] : themeColors.neutral[600]
-                    }
-                  />
                 </TouchableOpacity>
               </TouchableOpacity>
-            ))}
+              );
+            })}
           </View>
         ) : (
           <View style={styles.emptyState}>
@@ -813,7 +842,7 @@ const styles = StyleSheet.create({
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 6,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: themeColors.neutral[200],
@@ -930,12 +959,24 @@ const styles = StyleSheet.create({
     color: themeColors.neutral[500],
     textTransform: 'capitalize',
   },
+  dueBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  dueBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     backgroundColor: themeColors.neutral[100],
     gap: 4,
   },
@@ -1108,7 +1149,7 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 8,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     gap: 6,
   },
   chipBlue: {

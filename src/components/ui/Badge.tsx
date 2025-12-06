@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { colors, borderRadius, typography, spacing } from '../../config/theme';
+import { useTheme } from '../../stores/ThemeContext';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'accent';
 type BadgeSize = 'sm' | 'md';
@@ -18,9 +19,57 @@ export function Badge({
   size = 'md',
   style,
 }: BadgeProps) {
+  const { isDark } = useTheme();
+
+  const getVariantStyles = () => {
+    // Dark mode uses semi-transparent backgrounds
+    if (isDark) {
+      switch (variant) {
+        case 'primary':
+          return { bg: `${colors.primary[500]}25`, text: colors.primary[400] };
+        case 'success':
+          return { bg: `${colors.success[500]}25`, text: colors.success[400] };
+        case 'warning':
+          return { bg: `${colors.warning[500]}25`, text: colors.warning[400] };
+        case 'danger':
+          return { bg: `${colors.danger[500]}25`, text: colors.danger[400] };
+        case 'accent':
+          return { bg: `${colors.accent[500]}25`, text: colors.accent[400] };
+        default:
+          return { bg: colors.neutral[800], text: colors.neutral[400] };
+      }
+    }
+    // Light mode uses solid backgrounds
+    switch (variant) {
+      case 'primary':
+        return { bg: colors.primary[100], text: colors.primary[700] };
+      case 'success':
+        return { bg: colors.success[100], text: colors.success[700] };
+      case 'warning':
+        return { bg: colors.warning[100], text: colors.warning[700] };
+      case 'danger':
+        return { bg: colors.danger[100], text: colors.danger[700] };
+      case 'accent':
+        return { bg: colors.accent[100], text: colors.accent[700] };
+      default:
+        return { bg: colors.neutral[100], text: colors.neutral[700] };
+    }
+  };
+
+  const variantStyles = getVariantStyles();
+
   return (
-    <View style={[styles.base, styles[variant], styles[`${size}Size`], style]}>
-      <Text style={[styles.text, styles[`${variant}Text`], styles[`${size}Text`]]}>
+    <View style={[
+      styles.base,
+      styles[`${size}Size`],
+      { backgroundColor: variantStyles.bg },
+      style
+    ]}>
+      <Text style={[
+        styles.text,
+        styles[`${size}Text`],
+        { color: variantStyles.text }
+      ]}>
         {label}
       </Text>
     </View>
@@ -30,27 +79,7 @@ export function Badge({
 const styles = StyleSheet.create({
   base: {
     alignSelf: 'flex-start',
-    borderRadius: borderRadius.full,
-  },
-
-  // Variants
-  default: {
-    backgroundColor: colors.neutral[100],
-  },
-  primary: {
-    backgroundColor: colors.primary[100],
-  },
-  success: {
-    backgroundColor: colors.success[100],
-  },
-  warning: {
-    backgroundColor: colors.warning[100],
-  },
-  danger: {
-    backgroundColor: colors.danger[100],
-  },
-  accent: {
-    backgroundColor: colors.accent[100],
+    borderRadius: 6, // Slightly rounded square shape
   },
 
   // Sizes
@@ -66,24 +95,6 @@ const styles = StyleSheet.create({
   // Text styles
   text: {
     fontWeight: typography.fontWeight.medium,
-  },
-  defaultText: {
-    color: colors.neutral[700],
-  },
-  primaryText: {
-    color: colors.primary[700],
-  },
-  successText: {
-    color: colors.success[700],
-  },
-  warningText: {
-    color: colors.warning[700],
-  },
-  dangerText: {
-    color: colors.danger[700],
-  },
-  accentText: {
-    color: colors.accent[700],
   },
 
   // Text sizes

@@ -171,6 +171,16 @@ export default function StageDetailScreen() {
   };
 
   const getStatusStyle = (status: StageStatus) => {
+    if (isDark) {
+      switch (status) {
+        case 'completed':
+          return { bg: `${colors.success[500]}25`, text: colors.success[400] };
+        case 'in-progress':
+          return { bg: `${colors.primary[500]}25`, text: colors.primary[400] };
+        default:
+          return { bg: colors.neutral[800], text: colors.neutral[400] };
+      }
+    }
     switch (status) {
       case 'completed':
         return { bg: colors.success[50], text: colors.success[600] };
@@ -261,18 +271,21 @@ export default function StageDetailScreen() {
                   style={[
                     styles.statusOption,
                     { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] },
-                    isActive && styles.statusOptionActive
+                    isActive && {
+                      backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
+                      borderColor: isDark ? colors.primary[600] : colors.primary[300]
+                    }
                   ]}
                   onPress={() => handleStatusChange(option.value)}
                 >
                   <Icon
                     size={18}
-                    color={isActive ? colors.primary[600] : (isDark ? colors.neutral[500] : colors.neutral[400])}
+                    color={isActive ? (isDark ? colors.primary[400] : colors.primary[600]) : (isDark ? colors.neutral[500] : colors.neutral[400])}
                   />
                   <Text style={[
                     styles.statusOptionText,
                     { color: isDark ? colors.neutral[300] : colors.neutral[600] },
-                    isActive && styles.statusOptionTextActive
+                    isActive && { color: isDark ? colors.primary[400] : colors.primary[700] }
                   ]}>
                     {option.label}
                   </Text>
@@ -481,7 +494,7 @@ export default function StageDetailScreen() {
 
         {/* Delete Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? colors.danger[900] : colors.danger[50], borderColor: isDark ? colors.danger[700] : colors.danger[200] }]} onPress={handleDelete}>
+          <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? `${colors.danger[500]}15` : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
             <Trash2 size={18} color={isDark ? colors.danger[400] : colors.danger[600]} />
             <Text style={[styles.deleteButtonText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('forms.deleteStage')}</Text>
           </TouchableOpacity>
@@ -585,7 +598,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
   },
   statusText: {
     fontSize: 14,
@@ -675,7 +688,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     backgroundColor: themeColors.neutral[100],
   },
   categoryText: {

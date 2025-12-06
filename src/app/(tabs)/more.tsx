@@ -168,10 +168,31 @@ export default function MoreScreen() {
         </View>
 
         {/* Sign Out */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <LogOut size={20} color={colors.danger[500]} />
-          <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
-        </TouchableOpacity>
+        <View style={[
+          styles.menuSection,
+          {
+            backgroundColor: isDark ? colors.neutral[800] : '#fff',
+            borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+          }
+        ]}>
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomWidth: 0 }]}
+            onPress={handleSignOut}
+            activeOpacity={0.7}
+          >
+            <View style={[
+              styles.menuIcon,
+              { backgroundColor: isDark ? `${colors.danger[500]}25` : colors.danger[50] }
+            ]}>
+              <LogOut size={20} color={colors.danger[500]} />
+            </View>
+            <View style={styles.menuContent}>
+              <Text style={[styles.menuTitle, { color: colors.danger[500] }]}>
+                {t('settings.signOut')}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         <Text style={[styles.version, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
           {t('settings.version')}
@@ -267,20 +288,6 @@ const styles = StyleSheet.create({
   menuSubtitle: {
     fontSize: 13,
     marginTop: 2,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 8,
-    paddingVertical: 16,
-  },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#DC2626',
   },
   version: {
     fontSize: 13,

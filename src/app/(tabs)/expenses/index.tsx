@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 6,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: themeColors.neutral[200],
