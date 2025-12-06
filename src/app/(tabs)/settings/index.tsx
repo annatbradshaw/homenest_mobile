@@ -14,6 +14,7 @@ import {
   DollarSign,
   Users,
   Calendar,
+  FileText,
 } from 'lucide-react-native';
 import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
@@ -250,6 +251,13 @@ export default function SettingsScreen() {
               icon={<Shield size={20} color={isDark ? colors.neutral[300] : colors.neutral[600]} />}
               title={t('settings.privacyPolicy')}
               onPress={() => router.push('/(tabs)/settings/privacy')}
+              isDark={isDark}
+            />
+            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            <SettingItem
+              icon={<FileText size={20} color={isDark ? colors.neutral[300] : colors.neutral[600]} />}
+              title={t('settings.termsOfService')}
+              onPress={() => router.push('/(tabs)/settings/terms')}
               isDark={isDark}
             />
           </View>

@@ -170,10 +170,10 @@ Suggested flow:
 
 ## Support Information
 
-- **Support URL:** https://homenest.app/support
-- **Privacy Policy URL:** https://homenest.app/privacy
-- **Terms of Service URL:** https://homenest.app/terms
-- **Marketing URL:** https://homenest.app
+- **Support URL:** https://gethomenest.com/support
+- **Privacy Policy URL:** https://gethomenest.com/privacy
+- **Terms of Service URL:** https://gethomenest.com/terms
+- **Marketing URL:** https://gethomenest.com
 
 ---
 
@@ -181,7 +181,7 @@ Suggested flow:
 
 ```
 Test Account:
-Email: review@homenest.app
+Email: review@gethomenest.com
 Password: [provide test password]
 
 The app requires authentication to access features.

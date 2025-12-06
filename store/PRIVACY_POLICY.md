@@ -73,8 +73,8 @@ We may update this Privacy Policy periodically. We will notify you of significan
 ## Contact Us
 
 For privacy-related questions or requests:
-- Email: privacy@homenest.app
-- Support: https://homenest.app/support
+- Email: support@gethomenest.com
+- Support: https://gethomenest.com/support
 
 ## California Residents (CCPA)
 

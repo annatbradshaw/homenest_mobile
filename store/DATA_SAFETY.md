@@ -103,7 +103,7 @@ Yes - Uses only standard HTTPS/TLS
 
 Users can delete their account via:
 1. Settings > Account > Delete Account
-2. Email request to privacy@homenest.app
+2. Email request to support@gethomenest.com
 
 Upon deletion:
 - All personal data removed within 30 days

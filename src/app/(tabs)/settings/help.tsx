@@ -37,7 +37,7 @@ export default function HelpScreen() {
   const { t } = useLanguage();
 
   const handleEmailSupport = () => {
-    Linking.openURL('mailto:support@homenest.app?subject=HomeNest Support Request');
+    Linking.openURL('mailto:support@gethomenest.com?subject=HomeNest Support Request');
   };
 
   const handleChat = () => {
@@ -45,7 +45,7 @@ export default function HelpScreen() {
   };
 
   const handleDocs = () => {
-    Linking.openURL('https://homenest.app/docs');
+    Linking.openURL('https://gethomenest.com/docs');
   };
 
   return (

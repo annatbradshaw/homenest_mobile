@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../stores/AuthContext';
 import { ProjectProvider } from '../stores/ProjectContext';
 import { ThemeProvider, useTheme } from '../stores/ThemeContext';
+import { PreferencesProvider } from '../stores/PreferencesContext';
 import { LanguageProvider } from '../stores/LanguageContext';
 import { CurrencyProvider } from '../stores/CurrencyContext';
 import { AnimatedSplash } from '../components/AnimatedSplash';
@@ -86,18 +87,20 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <LanguageProvider>
-              <CurrencyProvider>
-                <AuthProvider>
-                  <ProjectProvider>
-                    <RootLayoutNav />
-                    {!splashAnimationComplete && (
-                      <AnimatedSplash onAnimationComplete={handleSplashAnimationComplete} />
-                    )}
-                  </ProjectProvider>
-                </AuthProvider>
-              </CurrencyProvider>
-            </LanguageProvider>
+            <PreferencesProvider>
+              <LanguageProvider>
+                <CurrencyProvider>
+                  <AuthProvider>
+                    <ProjectProvider>
+                      <RootLayoutNav />
+                      {!splashAnimationComplete && (
+                        <AnimatedSplash onAnimationComplete={handleSplashAnimationComplete} />
+                      )}
+                    </ProjectProvider>
+                  </AuthProvider>
+                </CurrencyProvider>
+              </LanguageProvider>
+            </PreferencesProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

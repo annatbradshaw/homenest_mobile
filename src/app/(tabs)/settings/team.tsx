@@ -22,12 +22,18 @@ import {
   Eye,
   X,
   Send,
+  Building2,
+  ChevronDown,
+  Check,
 } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { useTeamMembers } from '../../../hooks/useTeamMembers';
 import { useAuth } from '../../../stores/AuthContext';
-import { MemberRole } from '../../../types/database';
+import { useProject } from '../../../stores/ProjectContext';
+import { useSuppliers } from '../../../hooks/useSuppliers';
+import { useInviteToProject } from '../../../hooks/useInviteToProject';
+import { MemberRole, Supplier } from '../../../types/database';
 
 const ROLE_CONFIG: Record<MemberRole, { icon: any; color: string; darkColor: string }> = {
   owner: { icon: Crown, color: '#F59E0B', darkColor: '#FBBF24' },
@@ -42,10 +48,15 @@ export default function TeamScreen() {
   const { t } = useLanguage();
   const { data: members, isLoading, refetch } = useTeamMembers();
   const { user } = useAuth();
+  const { currentProject } = useProject();
+  const { data: suppliers } = useSuppliers(currentProject?.id);
+  const inviteMutation = useInviteToProject();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<MemberRole>('viewer');
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+  const [showSupplierPicker, setShowSupplierPicker] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   const getRoleIcon = (role: string) => {
@@ -56,6 +67,18 @@ export default function TeamScreen() {
 
   const getRoleLabel = (role: string) => {
     return t(`team.roles.${role}`) || role;
+  };
+
+  const getSelectedSupplier = (): Supplier | undefined => {
+    return suppliers?.find(s => s.id === selectedSupplierId);
+  };
+
+  const resetInviteForm = () => {
+    setShowInviteModal(false);
+    setInviteEmail('');
+    setInviteRole('viewer');
+    setSelectedSupplierId(null);
+    setShowSupplierPicker(false);
   };
 
   const handleInvite = async () => {
@@ -71,23 +94,29 @@ export default function TeamScreen() {
       return;
     }
 
+    // Require supplier selection for contractor role
+    if (inviteRole === 'contractor' && !selectedSupplierId) {
+      Alert.alert(t('common.error'), t('team.selectSupplierRequired'));
+      return;
+    }
+
     setIsSending(true);
     try {
-      // TODO: Implement actual invite API call
-      // await inviteTeamMember({ email: inviteEmail, role: inviteRole });
+      await inviteMutation.mutateAsync({
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        linkedSupplierId: inviteRole === 'contractor' ? selectedSupplierId || undefined : undefined,
+      });
 
-      // For now, show success message
       Alert.alert(
         t('team.inviteSent'),
         t('team.inviteSentDesc', { email: inviteEmail.trim() }),
-        [{ text: t('common.ok'), onPress: () => {
-          setShowInviteModal(false);
-          setInviteEmail('');
-          setInviteRole('viewer');
-        }}]
+        [{ text: t('common.ok'), onPress: resetInviteForm }]
       );
-    } catch (error) {
-      Alert.alert(t('common.error'), t('team.inviteFailed'));
+      refetch();
+    } catch (error: any) {
+      const message = error?.message || t('team.inviteFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setIsSending(false);
     }
@@ -309,6 +338,119 @@ export default function TeamScreen() {
                 })}
               </View>
             </View>
+
+            {/* Supplier Selection - Only for Contractor Role */}
+            {inviteRole === 'contractor' && (
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>
+                  {t('team.linkToSupplier')}
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.supplierSelector,
+                    {
+                      backgroundColor: isDark ? colors.neutral[700] : colors.neutral[50],
+                      borderColor: isDark ? colors.neutral[600] : colors.neutral[200],
+                    }
+                  ]}
+                  onPress={() => setShowSupplierPicker(!showSupplierPicker)}
+                >
+                  <Building2 size={20} color={isDark ? colors.neutral[400] : colors.neutral[400]} />
+                  <Text
+                    style={[
+                      styles.supplierSelectorText,
+                      {
+                        color: selectedSupplierId
+                          ? (isDark ? colors.neutral[50] : colors.neutral[900])
+                          : (isDark ? colors.neutral[500] : colors.neutral[400])
+                      }
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {getSelectedSupplier()?.name || t('team.selectSupplier')}
+                  </Text>
+                  <ChevronDown size={20} color={isDark ? colors.neutral[400] : colors.neutral[400]} />
+                </TouchableOpacity>
+
+                {/* Supplier Picker Dropdown */}
+                {showSupplierPicker && (
+                  <View style={[
+                    styles.supplierDropdown,
+                    {
+                      backgroundColor: isDark ? colors.neutral[700] : '#fff',
+                      borderColor: isDark ? colors.neutral[600] : colors.neutral[200],
+                    }
+                  ]}>
+                    {suppliers && suppliers.length > 0 ? (
+                      <ScrollView style={styles.supplierDropdownScroll} nestedScrollEnabled>
+                        {suppliers.map((supplier) => {
+                          const isSelected = supplier.id === selectedSupplierId;
+                          return (
+                            <TouchableOpacity
+                              key={supplier.id}
+                              style={[
+                                styles.supplierOption,
+                                isSelected && {
+                                  backgroundColor: isDark ? colors.primary[900] : colors.primary[50],
+                                }
+                              ]}
+                              onPress={() => {
+                                setSelectedSupplierId(supplier.id);
+                                setShowSupplierPicker(false);
+                              }}
+                            >
+                              <View style={styles.supplierOptionInfo}>
+                                <Text style={[
+                                  styles.supplierOptionName,
+                                  { color: isDark ? colors.neutral[50] : colors.neutral[900] }
+                                ]}>
+                                  {supplier.name}
+                                </Text>
+                                {supplier.specialty && (
+                                  <Text style={[
+                                    styles.supplierOptionSpecialty,
+                                    { color: isDark ? colors.neutral[400] : colors.neutral[500] }
+                                  ]}>
+                                    {supplier.specialty}
+                                  </Text>
+                                )}
+                              </View>
+                              {isSelected && (
+                                <Check size={18} color={colors.primary[600]} />
+                              )}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    ) : (
+                      <View style={styles.noSuppliersContainer}>
+                        <Text style={[
+                          styles.noSuppliersText,
+                          { color: isDark ? colors.neutral[400] : colors.neutral[500] }
+                        ]}>
+                          {t('team.noSuppliers')}
+                        </Text>
+                        <TouchableOpacity
+                          style={[styles.addSupplierLink, { borderColor: colors.primary[600] }]}
+                          onPress={() => {
+                            setShowInviteModal(false);
+                            router.push('/(tabs)/suppliers/add');
+                          }}
+                        >
+                          <Text style={[styles.addSupplierText, { color: colors.primary[600] }]}>
+                            {t('team.addSupplierFirst')}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                <Text style={[styles.supplierHint, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
+                  {t('team.supplierHint')}
+                </Text>
+              </View>
+            )}
 
             {/* Send Button */}
             <TouchableOpacity
@@ -560,5 +702,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  supplierSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
+    gap: 10,
+  },
+  supplierSelectorText: {
+    flex: 1,
+    fontSize: 16,
+  },
+  supplierDropdown: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  supplierDropdownScroll: {
+    maxHeight: 200,
+  },
+  supplierOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  supplierOptionInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  supplierOptionName: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  supplierOptionSpecialty: {
+    fontSize: 13,
+  },
+  noSuppliersContainer: {
+    padding: 20,
+    alignItems: 'center',
+    gap: 12,
+  },
+  noSuppliersText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  addSupplierLink: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  addSupplierText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  supplierHint: {
+    fontSize: 12,
+    marginTop: 6,
+    lineHeight: 16,
   },
 });

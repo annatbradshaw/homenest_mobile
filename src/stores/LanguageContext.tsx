@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import { getLocales } from 'expo-localization';
-import i18n, { TranslationKeys } from '../i18n';
+import i18n from '../i18n';
 import { format as dateFnsFormat, Locale } from 'date-fns';
 import { enUS, pl } from 'date-fns/locale';
 import { DATE_FORMATS, DateFormatType, DateFormatOption } from '../constants/dateFormats';
+import { usePreferences } from './PreferencesContext';
 
 // Re-export for backward compatibility
 export { DATE_FORMATS, DateFormatType, DateFormatOption } from '../constants/dateFormats';
@@ -22,9 +22,6 @@ interface LanguageContextType {
   formatDate: (date: Date | string, style?: 'short' | 'long') => string;
 }
 
-const LANGUAGE_STORAGE_KEY = '@homenest_language';
-const DATE_FORMAT_STORAGE_KEY = '@homenest_date_format';
-
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 // Get supported language from device locale
@@ -35,64 +32,29 @@ function getSupportedLanguage(languageCode: string): Language {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const { preferences, updatePreferences, isLoading } = usePreferences();
+
   const deviceLocales = getLocales();
   const deviceLang = getSupportedLanguage(deviceLocales[0]?.languageCode || 'en');
 
-  const [language, setLanguageState] = useState<Language>(deviceLang);
-  const [dateFormatId, setDateFormatId] = useState<DateFormatType>('mdy');
-  const [isLoading, setIsLoading] = useState(true);
+  // Get language from preferences
+  const language = preferences.language;
 
-  // Load saved preferences or use defaults
-  useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        const [savedLang, savedDateFormat] = await Promise.all([
-          AsyncStorage.getItem(LANGUAGE_STORAGE_KEY),
-          AsyncStorage.getItem(DATE_FORMAT_STORAGE_KEY),
-        ]);
-
-        if (savedLang && ['en', 'pl'].includes(savedLang)) {
-          setLanguageState(savedLang as Language);
-          i18n.locale = savedLang;
-        } else {
-          // No saved preference - use device language
-          i18n.locale = deviceLang;
-        }
-
-        if (savedDateFormat && ['mdy', 'dmy', 'ymd'].includes(savedDateFormat)) {
-          setDateFormatId(savedDateFormat as DateFormatType);
-        }
-      } catch (error) {
-        console.error('Failed to load preferences:', error);
-        // On error, still set device language
-        i18n.locale = deviceLang;
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadPreferences();
-  }, [deviceLang]);
+  // Update i18n locale when language changes
+  useMemo(() => {
+    i18n.locale = language;
+  }, [language]);
 
   // Save and update language
   const setLanguage = useCallback(async (newLang: Language) => {
-    try {
-      await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, newLang);
-      i18n.locale = newLang;
-      setLanguageState(newLang);
-    } catch (error) {
-      console.error('Failed to save language preference:', error);
-    }
-  }, []);
+    i18n.locale = newLang;
+    await updatePreferences({ language: newLang });
+  }, [updatePreferences]);
 
   // Save and update date format
   const setDateFormat = useCallback(async (formatId: DateFormatType) => {
-    try {
-      await AsyncStorage.setItem(DATE_FORMAT_STORAGE_KEY, formatId);
-      setDateFormatId(formatId);
-    } catch (error) {
-      console.error('Failed to save date format preference:', error);
-    }
-  }, []);
+    await updatePreferences({ dateFormat: formatId });
+  }, [updatePreferences]);
 
   // Translation function bound to current locale
   const t = useCallback(
@@ -113,8 +75,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Get current date format option
   const dateFormat = useMemo(() => {
-    return DATE_FORMATS.find(f => f.id === dateFormatId) || DATE_FORMATS[0];
-  }, [dateFormatId]);
+    return DATE_FORMATS.find(f => f.id === preferences.dateFormat) || DATE_FORMATS[0];
+  }, [preferences.dateFormat]);
 
   // Format date with current locale and format preference
   const formatDate = useCallback(
@@ -137,7 +99,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     formatDate,
   };
 
-  // Don't render until language is loaded
+  // Don't render until preferences are loaded
   if (isLoading) {
     return null;
   }

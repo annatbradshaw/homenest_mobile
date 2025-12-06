@@ -1,11 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useCallback, useMemo, ReactNode } from 'react';
 import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY, CurrencyInfo } from '../constants/currencies';
+import { usePreferences } from './PreferencesContext';
 
 // Re-export for backward compatibility
 export { SUPPORTED_CURRENCIES, CurrencyInfo } from '../constants/currencies';
-
-const CURRENCY_STORAGE_KEY = '@homenest_currency';
 
 interface CurrencyContextType {
   currency: CurrencyInfo;
@@ -21,52 +19,31 @@ interface CurrencyProviderProps {
 }
 
 export function CurrencyProvider({ children }: CurrencyProviderProps) {
-  const [currency, setCurrencyState] = useState<CurrencyInfo>(DEFAULT_CURRENCY);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { preferences, updatePreferences, isLoading } = usePreferences();
 
-  // Load saved currency on mount
-  useEffect(() => {
-    loadCurrency();
-  }, []);
+  // Get currency from preferences
+  const currency = useMemo(() => {
+    const found = SUPPORTED_CURRENCIES.find(c => c.code === preferences.currency);
+    return found || DEFAULT_CURRENCY;
+  }, [preferences.currency]);
 
-  const loadCurrency = async () => {
-    try {
-      const saved = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as CurrencyInfo;
-        // Validate it's still a supported currency
-        const found = SUPPORTED_CURRENCIES.find(c => c.code === parsed.code);
-        if (found) {
-          setCurrencyState(found);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load currency preference:', error);
-    } finally {
-      setIsLoaded(true);
-    }
-  };
+  const setCurrency = useCallback(async (newCurrency: CurrencyInfo) => {
+    await updatePreferences({
+      currency: newCurrency.code,
+      currencySymbol: newCurrency.symbol,
+    });
+  }, [updatePreferences]);
 
-  const setCurrency = async (newCurrency: CurrencyInfo) => {
-    try {
-      await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, JSON.stringify(newCurrency));
-      setCurrencyState(newCurrency);
-    } catch (error) {
-      console.error('Failed to save currency preference:', error);
-      throw error;
-    }
-  };
-
-  const formatAmount = (amount: number): string => {
+  const formatAmount = useCallback((amount: number): string => {
     return new Intl.NumberFormat(currency.locale, {
       style: 'currency',
       currency: currency.code,
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
-  };
+  }, [currency]);
 
-  const formatCompact = (amount: number): string => {
+  const formatCompact = useCallback((amount: number): string => {
     if (amount >= 1000000) {
       return `${currency.symbol}${(amount / 1000000).toFixed(1)}M`;
     }
@@ -74,10 +51,10 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
       return `${currency.symbol}${(amount / 1000).toFixed(1)}K`;
     }
     return `${currency.symbol}${amount.toFixed(0)}`;
-  };
+  }, [currency]);
 
-  // Don't render until we've loaded the preference
-  if (!isLoaded) {
+  // Don't render until preferences are loaded
+  if (isLoading) {
     return null;
   }
 

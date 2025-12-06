@@ -45,6 +45,7 @@ export default function PrivacyScreen() {
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.projectData')}</Text>
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.supplierInfo')}</Text>
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.photosDocuments')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.teamData')}</Text>
           </View>
 
           <View style={styles.section}>
@@ -56,6 +57,7 @@ export default function PrivacyScreen() {
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.sendNotifications')}</Text>
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.respondRequests')}</Text>
             <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.improveApp')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.enableCollaboration')}</Text>
           </View>
 
           <View style={styles.section}>
@@ -69,6 +71,13 @@ export default function PrivacyScreen() {
             <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.yourRights')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
               {t('privacy.yourRightsText')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.dataController')}</Text>
+            <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
+              {t('privacy.dataControllerText')}
             </Text>
           </View>
 
