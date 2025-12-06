@@ -16,18 +16,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check, X } from 'lucide-react-native';
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
+import { useLanguage } from '../../stores/LanguageContext';
 import { colors } from '../../config/theme';
-
-const PASSWORD_REQUIREMENTS = [
-  { label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
-  { label: 'Uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
-  { label: 'Lowercase letter', test: (p: string) => /[a-z]/.test(p) },
-  { label: 'Number', test: (p: string) => /[0-9]/.test(p) },
-];
 
 export default function SignupScreen() {
   const { signUp } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
+
+  const PASSWORD_REQUIREMENTS = [
+    { label: t('auth.passwordRequirements.minLength'), test: (p: string) => p.length >= 8 },
+    { label: t('auth.passwordRequirements.uppercase'), test: (p: string) => /[A-Z]/.test(p) },
+    { label: t('auth.passwordRequirements.lowercase'), test: (p: string) => /[a-z]/.test(p) },
+    { label: t('auth.passwordRequirements.number'), test: (p: string) => /[0-9]/.test(p) },
+  ];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,17 +37,17 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('common.error'), t('errors.fillAllFields'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters');
+      Alert.alert(t('common.error'), t('errors.passwordTooShort'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t('common.error'), t('errors.passwordMismatch'));
       return;
     }
 
@@ -54,16 +56,16 @@ export default function SignupScreen() {
       const { error } = await signUp(email, password);
 
       if (error) {
-        Alert.alert('Sign Up Failed', error.message);
+        Alert.alert(t('auth.signUpFailed'), error.message);
       } else {
         Alert.alert(
-          'Account Created',
-          'Please check your email to verify your account.',
-          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+          t('auth.accountCreated'),
+          t('auth.verifyEmail'),
+          [{ text: t('common.ok'), onPress: () => router.replace('/(auth)/login') }]
         );
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      Alert.alert(t('common.error'), t('errors.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ export default function SignupScreen() {
 
             {/* Tagline */}
             <Text style={[styles.tagline, isDark && styles.taglineDark]}>
-              Sign up to manage your renovation projects
+              {t('auth.tagline')}
             </Text>
 
             {/* Form */}
@@ -103,7 +105,7 @@ export default function SignupScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={email}
                 onChangeText={setEmail}
@@ -117,7 +119,7 @@ export default function SignupScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Password"
+                placeholder={t('auth.password')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={password}
                 onChangeText={setPassword}
@@ -157,7 +159,7 @@ export default function SignupScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Confirm password"
+                placeholder={t('auth.confirmPassword')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -172,33 +174,33 @@ export default function SignupScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Creating account...' : 'Sign Up'}
+                  {loading ? t('auth.creatingAccount') : t('auth.signUp')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Terms */}
             <Text style={[styles.terms, isDark && styles.termsDark]}>
-              By signing up, you agree to our{' '}
-              <Text style={styles.termsLink}>Terms</Text> and{' '}
-              <Text style={styles.termsLink}>Privacy Policy</Text>
+              {t('auth.termsText')}{' '}
+              <Text style={styles.termsLink}>{t('auth.terms')}</Text> {t('auth.and')}{' '}
+              <Text style={styles.termsLink}>{t('auth.privacyPolicy')}</Text>
             </Text>
 
             {/* Divider */}
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, isDark && styles.dividerDark]} />
-              <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>OR</Text>
+              <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>{t('common.or')}</Text>
               <View style={[styles.divider, isDark && styles.dividerDark]} />
             </View>
 
             {/* Login link */}
             <View style={styles.footer}>
               <Text style={[styles.footerText, isDark && styles.footerTextDark]}>
-                Already have an account?{' '}
+                {t('auth.hasAccount')}{' '}
               </Text>
               <Link href="/(auth)/login" asChild>
                 <TouchableOpacity>
-                  <Text style={styles.footerLink}>Log in</Text>
+                  <Text style={styles.footerLink}>{t('auth.logIn')}</Text>
                 </TouchableOpacity>
               </Link>
             </View>

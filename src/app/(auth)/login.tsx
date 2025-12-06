@@ -15,18 +15,20 @@ import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
+import { useLanguage } from '../../stores/LanguageContext';
 import { colors, typography, spacing } from '../../config/theme';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('common.error'), t('errors.fillAllFields'));
       return;
     }
 
@@ -34,12 +36,12 @@ export default function LoginScreen() {
     try {
       const { error } = await signIn(email, password);
       if (error) {
-        Alert.alert('Login Failed', error.message);
+        Alert.alert(t('auth.loginFailed'), error.message);
       } else {
         router.replace('/');
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      Alert.alert(t('common.error'), t('errors.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export default function LoginScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={email}
                 onChangeText={setEmail}
@@ -88,7 +90,7 @@ export default function LoginScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Password"
+                placeholder={t('auth.password')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={password}
                 onChangeText={setPassword}
@@ -103,14 +105,14 @@ export default function LoginScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Signing in...' : 'Log In'}
+                  {loading ? t('auth.signingIn') : t('auth.logIn')}
                 </Text>
               </TouchableOpacity>
 
               <Link href="/(auth)/forgot-password" asChild>
                 <TouchableOpacity style={styles.forgotPassword}>
                   <Text style={[styles.forgotPasswordText, isDark && styles.forgotPasswordTextDark]}>
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </Text>
                 </TouchableOpacity>
               </Link>
@@ -119,18 +121,18 @@ export default function LoginScreen() {
             {/* Divider */}
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, isDark && styles.dividerDark]} />
-              <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>OR</Text>
+              <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>{t('common.or')}</Text>
               <View style={[styles.divider, isDark && styles.dividerDark]} />
             </View>
 
             {/* Sign up link */}
             <View style={styles.footer}>
               <Text style={[styles.footerText, isDark && styles.footerTextDark]}>
-                Don't have an account?{' '}
+                {t('auth.noAccount')}{' '}
               </Text>
               <Link href="/(auth)/signup" asChild>
                 <TouchableOpacity>
-                  <Text style={styles.footerLink}>Sign up</Text>
+                  <Text style={styles.footerLink}>{t('auth.signUp')}</Text>
                 </TouchableOpacity>
               </Link>
             </View>

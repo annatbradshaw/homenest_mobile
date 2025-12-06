@@ -29,29 +29,31 @@ import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { ExpenseStatus } from '../../../types/database';
-import { formatCurrency } from '../../../utils/formatters';
-import { format } from 'date-fns';
-
-const STATUS_OPTIONS: { label: string; value: ExpenseStatus; icon: any }[] = [
-  { label: 'Pending', value: 'pending', icon: Clock },
-  { label: 'Paid', value: 'paid', icon: CheckCircle2 },
-];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  labor: 'Labor',
-  materials: 'Materials',
-  equipment: 'Equipment',
-  permits: 'Permits',
-  utilities: 'Utilities',
-  transportation: 'Transport',
-  other: 'Other',
-};
+import { useCurrency } from '../../../stores/CurrencyContext';
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentProject } = useProject();
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  const { formatAmount } = useCurrency();
+
+  // Define options inside component to access translations
+  const STATUS_OPTIONS: { label: string; value: ExpenseStatus; icon: any }[] = [
+    { label: t('expenses.pending'), value: 'pending', icon: Clock },
+    { label: t('expenses.paid'), value: 'paid', icon: CheckCircle2 },
+  ];
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    labor: t('expenses.categories.labor'),
+    materials: t('expenses.categories.materials'),
+    equipment: t('expenses.categories.equipment'),
+    permits: t('expenses.categories.permits'),
+    utilities: t('expenses.categories.utilities'),
+    transportation: t('expenses.categories.transportation'),
+    other: t('expenses.categories.other'),
+  };
+
   const { data: expenses } = useExpenses(currentProject?.id);
   const { data: stages } = useStages(currentProject?.id);
   const { data: suppliers } = useSuppliers(currentProject?.id);
@@ -70,11 +72,11 @@ export default function ExpenseDetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Expense</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('expenses.expense')}</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Expense not found</Text>
+          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.expenseNotFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -90,14 +92,14 @@ export default function ExpenseDetailScreen() {
         updates: { status: newStatus },
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update status');
+      Alert.alert(t('common.error'), t('errors.failedUpdateStatus'));
     }
   };
 
   const handleSave = async () => {
     const amount = parseFloat(editedAmount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Alert.alert(t('common.error'), t('errors.invalidAmount'));
       return;
     }
     try {
@@ -110,25 +112,25 @@ export default function ExpenseDetailScreen() {
       });
       setIsEditing(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update expense');
+      Alert.alert(t('common.error'), t('errors.failedUpdateExpense'));
     }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Expense',
-      'Are you sure you want to delete this expense?',
+      t('alerts.deleteExpenseTitle'),
+      t('alerts.deleteExpenseMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteExpense.mutateAsync(expense.id);
               router.back();
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete expense');
+              Alert.alert(t('common.error'), t('errors.failedDeleteExpense'));
             }
           },
         },
@@ -153,14 +155,14 @@ export default function ExpenseDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Expense Details</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('expenses.expenseDetails')}</Text>
         {isEditing ? (
           <TouchableOpacity onPress={handleSave}>
-            <Text style={styles.saveButton}>Save</Text>
+            <Text style={styles.saveButton}>{t('common.save')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={() => setIsEditing(true)}>
-            <Text style={styles.editButton}>Edit</Text>
+            <Text style={styles.editButton}>{t('common.edit')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -185,23 +187,23 @@ export default function ExpenseDetailScreen() {
                 style={[styles.descriptionInput, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}
                 value={editedDescription}
                 onChangeText={setEditedDescription}
-                placeholder="Add description..."
+                placeholder={t('expenses.addDescription')}
                 placeholderTextColor={colors.neutral[400]}
                 multiline
               />
             </>
           ) : (
             <>
-              <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatCurrency(expense.amount)}</Text>
+              <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(expense.amount)}</Text>
               <Text style={[styles.expenseDescription, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-                {expense.description || expense.category || 'Expense'}
+                {expense.description || expense.category || t('expenses.expense')}
               </Text>
             </>
           )}
           <View style={styles.badges}>
             <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
               <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                {expense.status === 'paid' ? 'Paid' : 'Pending'}
+                {expense.status === 'paid' ? t('expenses.paid') : t('expenses.pending')}
               </Text>
             </View>
             {expense.category && (
@@ -216,7 +218,7 @@ export default function ExpenseDetailScreen() {
 
         {/* Status Selector */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Status</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.status')}</Text>
           <View style={styles.statusOptions}>
             {STATUS_OPTIONS.map((option) => {
               const Icon = option.icon;
@@ -250,12 +252,12 @@ export default function ExpenseDetailScreen() {
 
         {/* Date */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Date</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.date')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.cardRow}>
               <Calendar size={18} color={colors.neutral[400]} />
               <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                {format(new Date(expense.date), 'MMMM d, yyyy')}
+                {formatDate(expense.date, 'long')}
               </Text>
             </View>
           </View>
@@ -264,7 +266,7 @@ export default function ExpenseDetailScreen() {
         {/* Payment Method */}
         {expense.payment_method && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Payment Method</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.paymentMethod')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <CreditCard size={18} color={colors.neutral[400]} />
@@ -279,7 +281,7 @@ export default function ExpenseDetailScreen() {
         {/* Linked Stage */}
         {linkedStage && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Linked Stage</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.linkedStage')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <TouchableOpacity
                 style={styles.cardRow}
@@ -295,7 +297,7 @@ export default function ExpenseDetailScreen() {
         {/* Supplier */}
         {linkedSupplier && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Supplier</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.supplier')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <User size={18} color={colors.neutral[400]} />
@@ -314,7 +316,7 @@ export default function ExpenseDetailScreen() {
         <View style={styles.section}>
           <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? colors.danger[900] : colors.danger[50], borderColor: isDark ? colors.danger[700] : colors.danger[200] }]} onPress={handleDelete}>
             <Trash2 size={18} color={colors.danger[600]} />
-            <Text style={styles.deleteButtonText}>Delete Expense</Text>
+            <Text style={styles.deleteButtonText}>{t('expenses.deleteExpense')}</Text>
           </TouchableOpacity>
         </View>
 

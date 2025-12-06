@@ -28,13 +28,14 @@ import { useStages } from '../../../hooks/useStages';
 import { useTodos } from '../../../hooks/useTodos';
 import { Card, Badge, LoadingSpinner, Button, Avatar } from '../../../components/ui';
 import { colors as themeColors, typography, spacing, categoryColors, statusColors } from '../../../config/theme';
-import { format } from 'date-fns';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
+import { useCurrency } from '../../../stores/CurrencyContext';
 
 export default function ProjectDetailScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  const { formatAmount } = useCurrency();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: project, isLoading, refetch } = useProject(id);
   const { data: stages } = useStages(id);
@@ -50,19 +51,19 @@ export default function ProjectDetailScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Project',
-      'Are you sure you want to delete this project? This action cannot be undone.',
+      t('alerts.deleteProjectTitle'),
+      t('alerts.deleteProjectMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteProject.mutateAsync(id!);
               router.back();
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete project');
+              Alert.alert(t('common.error'), t('errors.failedDeleteProject'));
             }
           },
         },
@@ -71,15 +72,15 @@ export default function ProjectDetailScreen() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen message="Loading project..." />;
+    return <LoadingSpinner fullScreen message={t('projects.loadingProject')} />;
   }
 
   if (!project) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.neutral[900] : colors.neutral[50] }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Project not found</Text>
-          <Button title="Go Back" onPress={() => router.back()} />
+          <Text style={[styles.errorText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('projects.projectNotFound')}</Text>
+          <Button title={t('projects.goBack')} onPress={() => router.back()} />
         </View>
       </SafeAreaView>
     );
@@ -123,7 +124,7 @@ export default function ProjectDetailScreen() {
           />
           {project.target_completion_date && (
             <Text style={[styles.dueDate, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-              Due {format(new Date(project.target_completion_date), 'MMM d, yyyy')}
+              {t('projects.due')} {formatDate(project.target_completion_date, 'long')}
             </Text>
           )}
         </View>
@@ -146,21 +147,21 @@ export default function ProjectDetailScreen() {
           <Card variant="elevated" style={[styles.budgetCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.budgetHeader}>
               <DollarSign size={20} color={colors.primary[600]} />
-              <Text style={[styles.budgetTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Budget</Text>
+              <Text style={[styles.budgetTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.budget')}</Text>
             </View>
             <View style={styles.budgetAmounts}>
               <View style={styles.budgetAmount}>
                 <Text style={[styles.budgetValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                  ${(project.actual_spent || 0).toLocaleString()}
+                  {formatAmount(project.actual_spent || 0)}
                 </Text>
-                <Text style={[styles.budgetLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Spent</Text>
+                <Text style={[styles.budgetLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('projects.spent')}</Text>
               </View>
               <View style={[styles.budgetDivider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[200] }]} />
               <View style={styles.budgetAmount}>
                 <Text style={[styles.budgetValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                  ${project.total_budget.toLocaleString()}
+                  {formatAmount(project.total_budget)}
                 </Text>
-                <Text style={[styles.budgetLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Total Budget</Text>
+                <Text style={[styles.budgetLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('projects.totalBudget')}</Text>
               </View>
             </View>
             <View style={styles.budgetProgress}>
@@ -195,7 +196,7 @@ export default function ProjectDetailScreen() {
             <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
               {completedStages}/{totalStages}
             </Text>
-            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Stages</Text>
+            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('tabs.stages')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -206,7 +207,7 @@ export default function ProjectDetailScreen() {
             <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
               {completedTodos}/{totalTodos}
             </Text>
-            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Tasks</Text>
+            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.title')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -215,7 +216,7 @@ export default function ProjectDetailScreen() {
           >
             <FileText size={24} color={colors.success[600]} />
             <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>--</Text>
-            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Docs</Text>
+            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('projects.docs')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -224,7 +225,7 @@ export default function ProjectDetailScreen() {
           >
             <Users size={24} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
             <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>--</Text>
-            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Suppliers</Text>
+            <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('suppliers.title')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -232,9 +233,9 @@ export default function ProjectDetailScreen() {
         {stages && stages.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Stages</Text>
+              <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('tabs.stages')}</Text>
               <TouchableOpacity>
-                <Text style={styles.sectionLink}>View all</Text>
+                <Text style={styles.sectionLink}>{t('projects.viewAll')}</Text>
               </TouchableOpacity>
             </View>
             {stages.slice(0, 3).map((stage) => (
@@ -273,9 +274,9 @@ export default function ProjectDetailScreen() {
         {todos && todos.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Recent Tasks</Text>
+              <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('projects.recentTasks')}</Text>
               <TouchableOpacity onPress={() => router.push(`/(tabs)/todos?project=${id}`)}>
-                <Text style={styles.sectionLink}>View all</Text>
+                <Text style={styles.sectionLink}>{t('projects.viewAll')}</Text>
               </TouchableOpacity>
             </View>
             {todos
@@ -303,7 +304,7 @@ export default function ProjectDetailScreen() {
                       <Text style={[styles.todoTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{todo.title}</Text>
                       {todo.due_date && (
                         <Text style={[styles.todoDue, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                          Due {format(new Date(todo.due_date), 'MMM d')}
+                          {t('projects.due')} {formatDate(todo.due_date, 'short')}
                         </Text>
                       )}
                     </View>

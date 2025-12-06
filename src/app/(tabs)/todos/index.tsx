@@ -24,30 +24,8 @@ import { useStages } from '../../../hooks/useStages';
 import { useTeamMembers } from '../../../hooks/useTeamMembers';
 import { colors as themeColors } from '../../../config/theme';
 import { Todo, TodoStatus, TodoPriority } from '../../../types/database';
-import { format } from 'date-fns';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-
-const STATUS_FILTERS: { label: string; value: TodoStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'To Do', value: 'todo' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'Done', value: 'completed' },
-];
-
-const PRIORITY_OPTIONS: { label: string; value: TodoPriority; color: string }[] = [
-  { label: 'Low', value: 'low', color: themeColors.neutral[400] },
-  { label: 'Medium', value: 'medium', color: themeColors.primary[500] },
-  { label: 'High', value: 'high', color: themeColors.accent[500] },
-  { label: 'Urgent', value: 'urgent', color: themeColors.danger[500] },
-];
-
-const STATUS_OPTIONS: { label: string; value: TodoStatus }[] = [
-  { label: 'To Do', value: 'todo' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'Done', value: 'completed' },
-  { label: 'Cancelled', value: 'cancelled' },
-];
 
 type ModalView = 'form' | 'assignee' | 'stages';
 
@@ -61,7 +39,40 @@ export default function TodosScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<TodoStatus | 'all'>('all');
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+
+  // Define filter and option arrays inside component to access translations
+  const STATUS_FILTERS: { label: string; value: TodoStatus | 'all' }[] = [
+    { label: t('common.all'), value: 'all' },
+    { label: t('todos.todo'), value: 'todo' },
+    { label: t('todos.inProgress'), value: 'in-progress' },
+    { label: t('todos.done'), value: 'completed' },
+  ];
+
+  const PRIORITY_OPTIONS: { label: string; value: TodoPriority; color: string }[] = [
+    { label: t('todos.priorities.low'), value: 'low', color: themeColors.neutral[400] },
+    { label: t('todos.priorities.medium'), value: 'medium', color: themeColors.primary[500] },
+    { label: t('todos.priorities.high'), value: 'high', color: themeColors.accent[500] },
+    { label: t('todos.priorities.urgent'), value: 'urgent', color: themeColors.danger[500] },
+  ];
+
+  const STATUS_OPTIONS: { label: string; value: TodoStatus }[] = [
+    { label: t('todos.todo'), value: 'todo' },
+    { label: t('todos.inProgress'), value: 'in-progress' },
+    { label: t('todos.done'), value: 'completed' },
+    { label: t('todos.cancelled'), value: 'cancelled' },
+  ];
+
+  // Helper function to get status label
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'todo': return t('todos.todo');
+      case 'in-progress': return t('todos.inProgress');
+      case 'completed': return t('todos.done');
+      case 'cancelled': return t('todos.cancelled');
+      default: return status;
+    }
+  };
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -112,7 +123,7 @@ export default function TodosScreen() {
         updates: { status: newStatus },
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update task status');
+      Alert.alert(t('common.error'), t('errors.failedUpdateTask'));
     }
   };
 
@@ -120,9 +131,9 @@ export default function TodosScreen() {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', ...STATUS_OPTIONS.map((o) => o.label)],
+          options: [t('common.cancel'), ...STATUS_OPTIONS.map((o) => o.label)],
           cancelButtonIndex: 0,
-          title: 'Change Status',
+          title: t('todos.changeStatus'),
         },
         (buttonIndex) => {
           if (buttonIndex > 0) {
@@ -134,7 +145,7 @@ export default function TodosScreen() {
         }
       );
     } else {
-      Alert.alert('Change Status', 'Select a new status', [
+      Alert.alert(t('todos.changeStatus'), t('common.select'), [
         ...STATUS_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () => {
@@ -143,7 +154,7 @@ export default function TodosScreen() {
             }
           },
         })),
-        { text: 'Cancel', style: 'cancel' as const },
+        { text: t('common.cancel'), style: 'cancel' as const },
       ]);
     }
   };
@@ -164,7 +175,7 @@ export default function TodosScreen() {
       });
       closeModal();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create task');
+      Alert.alert(t('common.error'), t('errors.failedCreateTask'));
     }
   };
 
@@ -250,7 +261,7 @@ export default function TodosScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.neutral[900] : colors.neutral[50] }]} edges={['top']}>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>No project selected</Text>
+          <Text style={[styles.emptyTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('errors.noProjectSelected')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -263,11 +274,11 @@ export default function TodosScreen() {
         <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
           <ChevronLeft size={24} color={colors.primary[600]} />
         </TouchableOpacity>
-        <Text style={[styles.selectionTitle, { color: colors.primary[700] }]}>Select Assignee</Text>
+        <Text style={[styles.selectionTitle, { color: colors.primary[700] }]}>{t('todos.selectAssignee')}</Text>
         <View style={styles.headerSpacer} />
       </View>
       <FlatList
-        data={[{ user_id: '', name: 'Unassigned', email: '', role: '' }, ...(teamMembers || [])]}
+        data={[{ user_id: '', name: t('todos.unassigned'), email: '', role: '' }, ...(teamMembers || [])]}
         keyExtractor={(item) => item.user_id || 'unassigned'}
         contentContainerStyle={styles.selectionList}
         renderItem={({ item }) => (
@@ -295,7 +306,7 @@ export default function TodosScreen() {
         <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
           <ChevronLeft size={24} color={colors.accent[600]} />
         </TouchableOpacity>
-        <Text style={[styles.selectionTitle, { color: colors.accent[700] }]}>Select Stages</Text>
+        <Text style={[styles.selectionTitle, { color: colors.accent[700] }]}>{t('todos.selectStages')}</Text>
         <View style={styles.headerSpacer} />
       </View>
       {stages && stages.length > 0 ? (
@@ -311,7 +322,7 @@ export default function TodosScreen() {
               <View style={styles.selectionItemContent}>
                 <Text style={[styles.selectionItemText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{item.name}</Text>
                 <Text style={[styles.selectionItemSubtext, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                  {item.status === 'completed' ? 'Completed' : item.status === 'in-progress' ? 'In Progress' : 'Not Started'}
+                  {item.status === 'completed' ? t('todos.completed') : item.status === 'in-progress' ? t('todos.inProgress') : t('todos.notStarted')}
                 </Text>
               </View>
               <View style={[
@@ -327,7 +338,7 @@ export default function TodosScreen() {
         />
       ) : (
         <View style={styles.selectionEmpty}>
-          <Text style={[styles.selectionEmptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>No stages in this project</Text>
+          <Text style={[styles.selectionEmptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.noStagesInProject')}</Text>
         </View>
       )}
     </View>
@@ -340,7 +351,7 @@ export default function TodosScreen() {
         <TouchableOpacity onPress={closeModal}>
           <X size={24} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
         </TouchableOpacity>
-        <Text style={[styles.modalTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>New Task</Text>
+        <Text style={[styles.modalTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('todos.newTask')}</Text>
         <TouchableOpacity
           onPress={handleCreateTask}
           disabled={!formData.title.trim() || createTodo.isPending}
@@ -362,28 +373,28 @@ export default function TodosScreen() {
       >
         <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
           {/* Title */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Title *</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.taskTitle')} *</Text>
           <TextInput
             style={[styles.textInput, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
               borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
               color: isDark ? colors.neutral[50] : colors.neutral[900]
             }]}
-            placeholder="What needs to be done?"
+            placeholder={t('todos.taskTitlePlaceholder')}
             placeholderTextColor={colors.neutral[400]}
             value={formData.title}
             onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
           />
 
           {/* Description */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Description</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.description')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
               borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
               color: isDark ? colors.neutral[50] : colors.neutral[900]
             }]}
-            placeholder="Add more details..."
+            placeholder={t('todos.descriptionPlaceholder')}
             placeholderTextColor={colors.neutral[400]}
             value={formData.description}
             onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
@@ -392,7 +403,7 @@ export default function TodosScreen() {
           />
 
           {/* Priority */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Priority</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.priority')}</Text>
           <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
             {PRIORITY_OPTIONS.map((option) => (
               <TouchableOpacity
@@ -418,7 +429,7 @@ export default function TodosScreen() {
           </View>
 
           {/* Due Date */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Due Date</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.dueDate')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -431,7 +442,7 @@ export default function TodosScreen() {
               formData.due_date ? styles.selectorText : styles.selectorPlaceholder,
               formData.due_date && { color: isDark ? colors.neutral[50] : colors.neutral[900] }
             ]}>
-              {formData.due_date ? format(new Date(formData.due_date), 'MMMM d, yyyy') : 'Select date'}
+              {formData.due_date ? formatDate(formData.due_date, 'long') : t('todos.selectDate')}
             </Text>
             {formData.due_date && (
               <TouchableOpacity
@@ -452,7 +463,7 @@ export default function TodosScreen() {
           )}
 
           {/* Assigned To */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Assigned To</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.assignedTo')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -464,13 +475,13 @@ export default function TodosScreen() {
               selectedAssigneeName ? styles.selectorText : styles.selectorPlaceholder,
               selectedAssigneeName && { color: isDark ? colors.neutral[50] : colors.neutral[900] }
             ]}>
-              {selectedAssigneeName || 'Select team member'}
+              {selectedAssigneeName || t('todos.selectTeamMember')}
             </Text>
             <ChevronRight size={18} color={colors.neutral[400]} />
           </TouchableOpacity>
 
           {/* Link to Stages */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Link to Stages</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.linkToStages')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -483,8 +494,8 @@ export default function TodosScreen() {
               selectedStagesNames.length > 0 && { color: isDark ? colors.neutral[50] : colors.neutral[900] }
             ]}>
               {selectedStagesNames.length > 0
-                ? `${selectedStagesNames.length} stage${selectedStagesNames.length > 1 ? 's' : ''} selected`
-                : 'Select stages'}
+                ? `${selectedStagesNames.length} ${t('todos.stagesSelected')}`
+                : t('todos.selectStagesBtn')}
             </Text>
             <ChevronRight size={18} color={colors.neutral[400]} />
           </TouchableOpacity>
@@ -502,7 +513,7 @@ export default function TodosScreen() {
           )}
 
           {/* Custom Tags */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Tags</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.tags')}</Text>
           <View style={styles.tagInputRow}>
             <TextInput
               style={[styles.textInput, styles.tagInput, {
@@ -510,7 +521,7 @@ export default function TodosScreen() {
                 borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
                 color: isDark ? colors.neutral[50] : colors.neutral[900]
               }]}
-              placeholder="Add a tag"
+              placeholder={t('todos.addTag')}
               placeholderTextColor={colors.neutral[400]}
               value={newTag}
               onChangeText={setNewTag}
@@ -547,7 +558,7 @@ export default function TodosScreen() {
         <View style={styles.headerLeft}>
           <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('todos.title')}</Text>
           <Text style={[styles.subtitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-            {stats.pending + stats.inProgress} remaining
+            {stats.pending + stats.inProgress} {t('todos.remaining')}
           </Text>
         </View>
         <TouchableOpacity
@@ -600,7 +611,7 @@ export default function TodosScreen() {
         {stats.total > 0 && (
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Task Progress</Text>
+              <Text style={styles.progressTitle}>{t('todos.taskProgress')}</Text>
               <Text style={styles.progressPercent}>
                 {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
               </Text>
@@ -614,7 +625,7 @@ export default function TodosScreen() {
               />
             </View>
             <Text style={styles.progressSubtext}>
-              {stats.completed} of {stats.total} tasks completed
+              {stats.completed} / {stats.total} {t('todos.tasksCompleted')}
             </Text>
           </View>
         )}
@@ -713,7 +724,7 @@ export default function TodosScreen() {
             <Text style={[styles.emptyStateText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
               {statusFilter === 'all'
                 ? t('todos.noTasksDesc')
-                : `No ${statusFilter.replace('-', ' ')} tasks`}
+                : t('todos.noFilteredTasks')}
             </Text>
           </View>
         )}
@@ -744,16 +755,6 @@ function getPriorityColor(priority: string): string {
     case 'high': return themeColors.accent[500];
     case 'medium': return themeColors.primary[500];
     default: return themeColors.neutral[400];
-  }
-}
-
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case 'todo': return 'To Do';
-    case 'in-progress': return 'In Progress';
-    case 'completed': return 'Done';
-    case 'cancelled': return 'Cancelled';
-    default: return status;
   }
 }
 

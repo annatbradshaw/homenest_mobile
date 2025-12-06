@@ -28,12 +28,13 @@ import { useStages } from '../../hooks/useStages';
 import { useTodos } from '../../hooks/useTodos';
 import { useExpenses } from '../../hooks/useExpenses';
 import { LoadingSpinner } from '../../components/ui';
-import { formatCurrency } from '../../utils/formatters';
+import { useCurrency } from '../../stores/CurrencyContext';
 
 export default function DashboardScreen() {
   const { currentProject, hasMultipleProjects } = useProject();
   const { isDark, colors } = useTheme();
   const { t } = useLanguage();
+  const { formatAmount } = useCurrency();
   const { data: stages, refetch: refetchStages } = useStages(currentProject?.id);
   const { data: todos, refetch: refetchTodos } = useTodos(currentProject?.id);
   const { data: expenses, refetch: refetchExpenses } = useExpenses(currentProject?.id);
@@ -188,10 +189,10 @@ export default function DashboardScreen() {
           >
             <View>
               <Text style={[styles.overviewValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                {formatCurrency(budgetStats.spent)}
+                {formatAmount(budgetStats.spent)}
               </Text>
               <Text style={[styles.overviewLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                of {formatCurrency(budgetStats.budget)} {t('dashboard.budget')}
+                of {formatAmount(budgetStats.budget)} {t('dashboard.budget')}
               </Text>
             </View>
             <View style={[styles.budgetBar, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]}>

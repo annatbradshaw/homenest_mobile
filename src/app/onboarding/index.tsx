@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { Building2, FolderOpen, ArrowRight, Check, Home } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../stores/AuthContext';
+import { useLanguage } from '../../stores/LanguageContext';
 import { Button, Input, Card } from '../../components/ui';
 import { colors, typography, spacing } from '../../config/theme';
 
@@ -20,6 +21,7 @@ type Step = 'organization' | 'project';
 
 export default function OnboardingScreen() {
   const { user, refreshProfile } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState<Step>('organization');
   const [loading, setLoading] = useState(false);
 
@@ -53,12 +55,12 @@ export default function OnboardingScreen() {
   const validateOrg = () => {
     const newErrors: typeof errors = {};
     if (!orgName.trim()) {
-      newErrors.orgName = 'Organization name is required';
+      newErrors.orgName = t('errors.orgNameRequired');
     }
     if (!orgSlug.trim()) {
-      newErrors.orgSlug = 'URL slug is required';
+      newErrors.orgSlug = t('errors.slugRequired');
     } else if (!/^[a-z0-9-]+$/.test(orgSlug)) {
-      newErrors.orgSlug = 'Slug can only contain lowercase letters, numbers, and hyphens';
+      newErrors.orgSlug = t('errors.invalidSlug');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -67,7 +69,7 @@ export default function OnboardingScreen() {
   const validateProject = () => {
     const newErrors: typeof errors = {};
     if (!projectName.trim()) {
-      newErrors.projectName = 'Project name is required';
+      newErrors.projectName = t('errors.projectNameRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -129,7 +131,7 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Onboarding error:', error);
-      Alert.alert('Error', error.message || 'Failed to complete setup');
+      Alert.alert(t('common.error'), error.message || t('errors.failedToComplete'));
     } finally {
       setLoading(false);
     }
@@ -172,7 +174,7 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Onboarding error:', error);
-      Alert.alert('Error', error.message || 'Failed to complete setup');
+      Alert.alert(t('common.error'), error.message || t('errors.failedToComplete'));
     } finally {
       setLoading(false);
     }
@@ -206,7 +208,7 @@ export default function OnboardingScreen() {
                   <Text style={styles.progressDotText}>1</Text>
                 )}
               </View>
-              <Text style={styles.progressLabel}>Organization</Text>
+              <Text style={styles.progressLabel}>{t('onboarding.organization')}</Text>
             </View>
             <View style={styles.progressLine} />
             <View style={styles.progressStep}>
@@ -218,7 +220,7 @@ export default function OnboardingScreen() {
               >
                 <Text style={styles.progressDotText}>2</Text>
               </View>
-              <Text style={styles.progressLabel}>First Project</Text>
+              <Text style={styles.progressLabel}>{t('onboarding.firstProject')}</Text>
             </View>
           </View>
 
@@ -229,35 +231,35 @@ export default function OnboardingScreen() {
                 <View style={styles.iconContainer}>
                   <Building2 size={32} color={colors.primary[600]} />
                 </View>
-                <Text style={styles.title}>Create Your Organization</Text>
+                <Text style={styles.title}>{t('onboarding.createOrganization')}</Text>
                 <Text style={styles.subtitle}>
-                  Set up your workspace to start managing renovation projects.
+                  {t('onboarding.createOrganizationSubtitle')}
                 </Text>
               </View>
 
               {/* Organization Form */}
               <View style={styles.form}>
                 <Input
-                  label="Organization Name"
-                  placeholder="e.g., Smith Family Renovations"
+                  label={t('onboarding.organizationName')}
+                  placeholder={t('onboarding.organizationNamePlaceholder')}
                   value={orgName}
                   onChangeText={handleOrgNameChange}
                   error={errors.orgName}
                 />
 
                 <Input
-                  label="URL Slug"
-                  placeholder="smith-family-renovations"
+                  label={t('onboarding.urlSlug')}
+                  placeholder={t('onboarding.urlSlugPlaceholder')}
                   value={orgSlug}
                   onChangeText={setOrgSlug}
                   error={errors.orgSlug}
                   autoCapitalize="none"
-                  hint="This will be used in your organization's URL"
+                  hint={t('onboarding.urlSlugHint')}
                 />
 
                 <Input
-                  label="Description (optional)"
-                  placeholder="Brief description of your organization..."
+                  label={t('onboarding.description')}
+                  placeholder={t('onboarding.descriptionPlaceholder')}
                   value={orgDescription}
                   onChangeText={setOrgDescription}
                   multiline
@@ -273,32 +275,32 @@ export default function OnboardingScreen() {
                 <View style={styles.iconContainer}>
                   <FolderOpen size={32} color={colors.primary[600]} />
                 </View>
-                <Text style={styles.title}>Create Your First Project</Text>
+                <Text style={styles.title}>{t('onboarding.createFirstProject')}</Text>
                 <Text style={styles.subtitle}>
-                  Add your first renovation project to get started.
+                  {t('onboarding.createFirstProjectSubtitle')}
                 </Text>
               </View>
 
               {/* Project Form */}
               <View style={styles.form}>
                 <Input
-                  label="Project Name"
-                  placeholder="e.g., Kitchen Renovation"
+                  label={t('projects.projectName')}
+                  placeholder={t('onboarding.projectNamePlaceholder')}
                   value={projectName}
                   onChangeText={setProjectName}
                   error={errors.projectName}
                 />
 
                 <Input
-                  label="Address (optional)"
-                  placeholder="Project location"
+                  label={t('projects.address')}
+                  placeholder={t('onboarding.addressPlaceholder')}
                   value={projectAddress}
                   onChangeText={setProjectAddress}
                 />
 
                 <Input
-                  label="Budget (optional)"
-                  placeholder="0.00"
+                  label={t('projects.totalBudget')}
+                  placeholder={t('onboarding.budgetPlaceholder')}
                   value={projectBudget}
                   onChangeText={(text) => setProjectBudget(text.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
@@ -312,7 +314,7 @@ export default function OnboardingScreen() {
         <View style={styles.footer}>
           {step === 'organization' ? (
             <Button
-              title="Continue"
+              title={t('common.continue')}
               onPress={handleCreateOrganization}
               fullWidth
               size="lg"
@@ -321,14 +323,14 @@ export default function OnboardingScreen() {
           ) : (
             <>
               <Button
-                title="Create Project"
+                title={t('onboarding.createProject')}
                 onPress={handleComplete}
                 loading={loading}
                 fullWidth
                 size="lg"
               />
               <Button
-                title="Skip for now"
+                title={t('common.skipForNow')}
                 onPress={handleSkipProject}
                 variant="ghost"
                 fullWidth

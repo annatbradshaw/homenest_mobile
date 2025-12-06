@@ -1,39 +1,33 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Image, Animated } from 'react-native';
-import { colors } from '../config/theme';
+import { StyleSheet, Image, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface AnimatedSplashProps {
   onAnimationComplete: () => void;
 }
 
 export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
-  const logoScale = useRef(new Animated.Value(0.3)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoTranslateY = useRef(new Animated.Value(20)).current;
   const containerOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Logo fade in and scale up
+    // Logo fade in and gentle scale up
     Animated.parallel([
       Animated.timing(logoOpacity, {
         toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoTranslateY, {
-        toValue: 0,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.sequence([
         Animated.timing(logoScale, {
-          toValue: 1.1,
-          duration: 500,
+          toValue: 1.05,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.timing(logoScale, {
           toValue: 1,
-          duration: 200,
+          duration: 300,
           useNativeDriver: true,
         }),
       ]),
@@ -48,31 +42,35 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
       }).start(() => {
         onAnimationComplete();
       });
-    }, 1800);
+    }, 2000);
 
     return () => clearTimeout(timeout);
   }, []);
 
   return (
     <Animated.View style={[styles.container, { opacity: containerOpacity }]}>
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: logoOpacity,
-            transform: [
-              { scale: logoScale },
-              { translateY: logoTranslateY },
-            ],
-          },
-        ]}
+      <LinearGradient
+        colors={['#E8F4FD', '#F5F0E6']}
+        style={styles.gradient}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
       >
-        <Image
-          source={require('../../assets/icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </Animated.View>
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            {
+              opacity: logoOpacity,
+              transform: [{ scale: logoScale }],
+            },
+          ]}
+        >
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </LinearGradient>
     </Animated.View>
   );
 }
@@ -80,17 +78,19 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.primary[600],
+    zIndex: 1000,
+  },
+  gradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
   },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 180,
+    height: 180,
   },
 });

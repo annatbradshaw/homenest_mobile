@@ -28,38 +28,8 @@ import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { ExpenseStatus } from '../../../types/database';
-import { formatCurrency } from '../../../utils/formatters';
-import { format } from 'date-fns';
+import { useCurrency } from '../../../stores/CurrencyContext';
 import { pickReceiptImage, uploadReceiptImage } from '../../../utils/receiptUpload';
-
-const STATUS_FILTERS: { label: string; value: ExpenseStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Paid', value: 'paid' },
-];
-
-const EXPENSE_CATEGORIES = [
-  { label: 'Labor', value: 'labor' },
-  { label: 'Materials', value: 'materials' },
-  { label: 'Equipment', value: 'equipment' },
-  { label: 'Permits', value: 'permits' },
-  { label: 'Utilities', value: 'utilities' },
-  { label: 'Transport', value: 'transportation' },
-  { label: 'Other', value: 'other' },
-];
-
-const STATUS_OPTIONS: { label: string; value: ExpenseStatus }[] = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Paid', value: 'paid' },
-];
-
-const PAYMENT_METHODS = [
-  { label: 'Cash', value: 'cash' },
-  { label: 'Check', value: 'check' },
-  { label: 'Card', value: 'credit-card' },
-  { label: 'Transfer', value: 'bank-transfer' },
-  { label: 'Invoice', value: 'invoice' },
-];
 
 type ModalView = 'form' | 'stage' | 'supplier';
 
@@ -72,7 +42,38 @@ export default function ExpensesScreen() {
   const { data: suppliers } = useSuppliers(currentProject?.id);
   const createExpense = useCreateExpense();
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  const { formatAmount } = useCurrency();
+
+  // Define filter and category options inside component to access translations
+  const STATUS_FILTERS: { label: string; value: ExpenseStatus | 'all' }[] = [
+    { label: t('common.all'), value: 'all' },
+    { label: t('expenses.pending'), value: 'pending' },
+    { label: t('expenses.paid'), value: 'paid' },
+  ];
+
+  const EXPENSE_CATEGORIES = [
+    { label: t('expenses.categories.labor'), value: 'labor' },
+    { label: t('expenses.categories.materials'), value: 'materials' },
+    { label: t('expenses.categories.equipment'), value: 'equipment' },
+    { label: t('expenses.categories.permits'), value: 'permits' },
+    { label: t('expenses.categories.utilities'), value: 'utilities' },
+    { label: t('expenses.categories.transportation'), value: 'transportation' },
+    { label: t('expenses.categories.other'), value: 'other' },
+  ];
+
+  const STATUS_OPTIONS: { label: string; value: ExpenseStatus }[] = [
+    { label: t('expenses.pending'), value: 'pending' },
+    { label: t('expenses.paid'), value: 'paid' },
+  ];
+
+  const PAYMENT_METHODS = [
+    { label: t('expenses.paymentMethods.cash'), value: 'cash' },
+    { label: t('expenses.paymentMethods.check'), value: 'check' },
+    { label: t('expenses.paymentMethods.creditCard'), value: 'credit-card' },
+    { label: t('expenses.paymentMethods.bankTransfer'), value: 'bank-transfer' },
+    { label: t('expenses.paymentMethods.invoice'), value: 'invoice' },
+  ];
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -160,7 +161,7 @@ export default function ExpensesScreen() {
         setUploadingReceipt(false);
 
         if (!result.success) {
-          Alert.alert('Error', result.error || 'Failed to upload receipt');
+          Alert.alert(t('common.error'), result.error || t('errors.failedUploadReceipt'));
           return;
         }
         receiptUrl = result.url;
@@ -181,7 +182,7 @@ export default function ExpensesScreen() {
       closeModal();
     } catch (error) {
       setUploadingReceipt(false);
-      Alert.alert('Error', 'Failed to create expense');
+      Alert.alert(t('common.error'), t('errors.failedCreateExpense'));
     }
   };
 
@@ -224,7 +225,7 @@ export default function ExpensesScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.neutral[900] : colors.neutral[50] }]} edges={['top']}>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>No project selected</Text>
+          <Text style={[styles.emptyTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('errors.noProjectSelected')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -237,11 +238,11 @@ export default function ExpensesScreen() {
         <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
           <ChevronLeft size={24} color={colors.accent[600]} />
         </TouchableOpacity>
-        <Text style={[styles.selectionTitle, { color: isDark ? colors.neutral[50] : colors.accent[700] }]}>Select Stage</Text>
+        <Text style={[styles.selectionTitle, { color: isDark ? colors.neutral[50] : colors.accent[700] }]}>{t('forms.selectStage')}</Text>
         <View style={styles.headerSpacer} />
       </View>
       <FlatList
-        data={[{ id: '', name: 'None' }, ...(stages || [])]}
+        data={[{ id: '', name: t('common.none') }, ...(stages || [])]}
         keyExtractor={(item) => item.id || 'none'}
         contentContainerStyle={styles.selectionList}
         renderItem={({ item }) => (
@@ -269,11 +270,11 @@ export default function ExpensesScreen() {
         <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
           <ChevronLeft size={24} color={colors.success[600]} />
         </TouchableOpacity>
-        <Text style={[styles.selectionTitle, { color: isDark ? colors.neutral[50] : colors.success[700] }]}>Select Supplier</Text>
+        <Text style={[styles.selectionTitle, { color: isDark ? colors.neutral[50] : colors.success[700] }]}>{t('forms.selectSupplier')}</Text>
         <View style={styles.headerSpacer} />
       </View>
       <FlatList
-        data={[{ id: '', name: 'None', company: '' }, ...(suppliers || [])]}
+        data={[{ id: '', name: t('common.none'), company: '' }, ...(suppliers || [])]}
         keyExtractor={(item) => item.id || 'none'}
         contentContainerStyle={styles.selectionList}
         renderItem={({ item }) => (
@@ -317,7 +318,7 @@ export default function ExpensesScreen() {
               (!formData.amount || createExpense.isPending) && styles.modalSaveTextDisabled,
             ]}
           >
-            {createExpense.isPending ? 'Saving...' : t('common.save')}
+            {createExpense.isPending ? t('common.saving') : t('common.save')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -328,7 +329,7 @@ export default function ExpensesScreen() {
       >
         <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
           {/* Amount */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Amount *</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.amountRequired')}</Text>
           <TextInput
             style={[styles.textInput, {
               color: isDark ? colors.neutral[50] : colors.neutral[900],
@@ -343,7 +344,7 @@ export default function ExpensesScreen() {
           />
 
           {/* Date */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Date</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.date')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -353,7 +354,7 @@ export default function ExpensesScreen() {
           >
             <Calendar size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
             <Text style={[styles.selectorText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-              {format(new Date(formData.date), 'MMMM d, yyyy')}
+              {formatDate(formData.date, 'long')}
             </Text>
           </TouchableOpacity>
           {showDatePicker && (
@@ -366,21 +367,21 @@ export default function ExpensesScreen() {
           )}
 
           {/* Description */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Description</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.descriptionLabel')}</Text>
           <TextInput
             style={[styles.textInput, {
               color: isDark ? colors.neutral[50] : colors.neutral[900],
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
               borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
             }]}
-            placeholder="What was this expense for?"
+            placeholder={t('forms.descriptionPlaceholder')}
             placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
             value={formData.description}
             onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
           />
 
           {/* Category */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Category</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.category')}</Text>
           <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
             {EXPENSE_CATEGORIES.slice(0, 4).map((cat) => (
               <TouchableOpacity
@@ -433,7 +434,7 @@ export default function ExpensesScreen() {
           </View>
 
           {/* Status */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Status</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.status')}</Text>
           <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
             {STATUS_OPTIONS.map((option) => (
               <TouchableOpacity
@@ -458,7 +459,7 @@ export default function ExpensesScreen() {
           </View>
 
           {/* Stage */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Link to Stage</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.linkToStage')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -467,13 +468,13 @@ export default function ExpensesScreen() {
             onPress={() => setModalView('stage')}
           >
             <Text style={selectedStageName ? [styles.selectorText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }] : [styles.selectorPlaceholder, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
-              {selectedStageName || 'Select stage'}
+              {selectedStageName || t('forms.selectStage')}
             </Text>
             <ChevronRight size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
           </TouchableOpacity>
 
           {/* Supplier */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Supplier</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.supplier')}</Text>
           <TouchableOpacity
             style={[styles.selectorButton, {
               backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
@@ -482,13 +483,13 @@ export default function ExpensesScreen() {
             onPress={() => setModalView('supplier')}
           >
             <Text style={selectedSupplierName ? [styles.selectorText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }] : [styles.selectorPlaceholder, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
-              {selectedSupplierName || 'Select supplier'}
+              {selectedSupplierName || t('forms.selectSupplier')}
             </Text>
             <ChevronRight size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
           </TouchableOpacity>
 
           {/* Payment Method */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Payment Method</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.paymentMethod')}</Text>
           <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
             {PAYMENT_METHODS.map((method) => (
               <TouchableOpacity
@@ -517,7 +518,7 @@ export default function ExpensesScreen() {
           </View>
 
           {/* Receipt Upload */}
-          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Receipt</Text>
+          <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
           {receiptImageUri ? (
             <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
               <Image source={{ uri: receiptImageUri }} style={styles.receiptPreview} />
@@ -538,7 +539,7 @@ export default function ExpensesScreen() {
                 onPress={() => handlePickReceipt(true)}
               >
                 <Camera size={20} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
-                <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>Take Photo</Text>
+                <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>{t('expenses.takePhoto')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.receiptButton, {
@@ -548,7 +549,7 @@ export default function ExpensesScreen() {
                 onPress={() => handlePickReceipt(false)}
               >
                 <ImageIcon size={20} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
-                <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>From Library</Text>
+                <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>{t('expenses.fromLibrary')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -556,7 +557,7 @@ export default function ExpensesScreen() {
           {uploadingReceipt && (
             <View style={styles.uploadingContainer}>
               <ActivityIndicator size="small" color={colors.primary[600]} />
-              <Text style={[styles.uploadingText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Uploading receipt...</Text>
+              <Text style={[styles.uploadingText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.uploadingReceipt')}</Text>
             </View>
           )}
 
@@ -572,7 +573,7 @@ export default function ExpensesScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('expenses.title')}</Text>
-          <Text style={[styles.subtitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{formatCurrency(budgetStats.remaining)} remaining</Text>
+          <Text style={[styles.subtitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{formatAmount(budgetStats.remaining)} {t('expenses.remaining')}</Text>
         </View>
         <TouchableOpacity
           style={styles.addButton}
@@ -594,12 +595,12 @@ export default function ExpensesScreen() {
         <View style={styles.budgetCard}>
           <View style={styles.budgetRow}>
             <View style={styles.budgetItem}>
-              <Text style={styles.budgetLabel}>Total Budget</Text>
-              <Text style={styles.budgetValue}>{formatCurrency(budgetStats.budget)}</Text>
+              <Text style={styles.budgetLabel}>{t('expenses.totalBudget')}</Text>
+              <Text style={styles.budgetValue}>{formatAmount(budgetStats.budget)}</Text>
             </View>
             <View style={styles.budgetItem}>
-              <Text style={styles.budgetLabel}>Spent</Text>
-              <Text style={styles.budgetValue}>{formatCurrency(budgetStats.spent)}</Text>
+              <Text style={styles.budgetLabel}>{t('expenses.spent')}</Text>
+              <Text style={styles.budgetValue}>{formatAmount(budgetStats.spent)}</Text>
             </View>
           </View>
           <View style={styles.progressBar}>
@@ -613,12 +614,12 @@ export default function ExpensesScreen() {
               ]}
             />
           </View>
-          <Text style={styles.percentageText}>{budgetStats.percentage}% of budget used</Text>
+          <Text style={styles.percentageText}>{budgetStats.percentage}{t('expenses.budgetUsed')}</Text>
         </View>
 
         {/* Filter Tabs */}
         <View style={styles.filterSection}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Expenses</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('tabs.expenses')}</Text>
           <View style={styles.filterRow}>
             {STATUS_FILTERS.map((filter) => (
               <TouchableOpacity
@@ -641,15 +642,15 @@ export default function ExpensesScreen() {
               <TouchableOpacity key={expense.id} style={[styles.expenseItem, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} onPress={() => router.push(`/(tabs)/expenses/${expense.id}`)}>
                 <View style={styles.expenseInfo}>
                   <Text style={[styles.expenseDescription, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]} numberOfLines={1}>
-                    {expense.description || expense.category || 'Expense'}
+                    {expense.description || expense.category || t('expenses.expense')}
                   </Text>
                   <Text style={[styles.expenseDate, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                    {format(new Date(expense.date), 'MMM d, yyyy')}
+                    {formatDate(expense.date, 'short')}
                     {expense.category && ` · ${expense.category}`}
                   </Text>
                 </View>
                 <View style={styles.expenseRight}>
-                  <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatCurrency(expense.amount)}</Text>
+                  <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(expense.amount)}</Text>
                   <Text style={[styles.expenseStatus, expense.status === 'paid' && styles.statusPaid]}>
                     {expense.status}
                   </Text>
@@ -664,7 +665,7 @@ export default function ExpensesScreen() {
             </View>
             <Text style={[styles.emptyStateTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('expenses.noExpenses')}</Text>
             <Text style={[styles.emptyStateText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-              Track your spending by adding expenses
+              {t('expenses.noExpensesDesc')}
             </Text>
           </View>
         )}

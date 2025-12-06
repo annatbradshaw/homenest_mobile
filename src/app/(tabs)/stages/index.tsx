@@ -24,23 +24,7 @@ import { useStages, useCreateStage } from '../../../hooks/useStages';
 import { colors as themeColors } from '../../../config/theme';
 import { useSuppliers } from '../../../hooks/useSuppliers';
 import { StageStatus, StageCategory } from '../../../types/database';
-import { format, isPast, isToday, parseISO } from 'date-fns';
-
-const STAGE_CATEGORIES: { label: string; value: StageCategory }[] = [
-  { label: 'Site Work', value: 'site-work' },
-  { label: 'Utilities', value: 'utilities' },
-  { label: 'Structure', value: 'structure' },
-  { label: 'Interior', value: 'interior' },
-  { label: 'Exterior', value: 'exterior' },
-  { label: 'Finishing', value: 'finishing' },
-  { label: 'Other', value: 'other' },
-];
-
-const STATUS_OPTIONS: { label: string; value: StageStatus }[] = [
-  { label: 'Not Started', value: 'not-started' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'Completed', value: 'completed' },
-];
+import { isPast, isToday, parseISO } from 'date-fns';
 
 type DateField = 'planned_start_date' | 'planned_end_date';
 type ModalView = 'form' | 'suppliers' | 'dependencies';
@@ -49,7 +33,24 @@ export default function StagesScreen() {
   const { openAdd } = useLocalSearchParams<{ openAdd?: string }>();
   const { currentProject } = useProject();
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+
+  // Define categories and status options inside component to access translations
+  const STAGE_CATEGORIES: { label: string; value: StageCategory }[] = [
+    { label: t('stages.categories.siteWork'), value: 'site-work' },
+    { label: t('stages.categories.utilities'), value: 'utilities' },
+    { label: t('stages.categories.structure'), value: 'structure' },
+    { label: t('stages.categories.interior'), value: 'interior' },
+    { label: t('stages.categories.exterior'), value: 'exterior' },
+    { label: t('stages.categories.finishing'), value: 'finishing' },
+    { label: t('stages.categories.other'), value: 'other' },
+  ];
+
+  const STATUS_OPTIONS: { label: string; value: StageStatus }[] = [
+    { label: t('stages.notStarted'), value: 'not-started' },
+    { label: t('stages.inProgress'), value: 'in-progress' },
+    { label: t('stages.completed'), value: 'completed' },
+  ];
   const { data: stages, isLoading, refetch } = useStages(currentProject?.id);
   const { data: suppliers } = useSuppliers(currentProject?.id);
   const createStage = useCreateStage();
@@ -120,7 +121,7 @@ export default function StagesScreen() {
       resetForm();
       setShowAddModal(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to create stage');
+      Alert.alert(t('common.error'), t('errors.failedCreateStage'));
     }
   };
 
@@ -235,7 +236,7 @@ export default function StagesScreen() {
         {/* Progress Overview */}
         <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>Overall Progress</Text>
+            <Text style={styles.progressTitle}>{t('forms.overallProgress')}</Text>
             <Text style={styles.progressPercent}>
               {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
             </Text>
@@ -317,7 +318,7 @@ export default function StagesScreen() {
                     isOverdue && { borderColor: themeColors.danger[500], borderWidth: 1.5 }
                   ]}>
                     <View style={styles.stageInfo}>
-                      <Text style={[styles.stageNumber, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Stage {index + 1}</Text>
+                      <Text style={[styles.stageNumber, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.stage')} {index + 1}</Text>
                       <Text style={[styles.stageName, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{stage.name}</Text>
                       {/* Date display */}
                       {(stage.planned_start_date || stage.planned_end_date) && (
@@ -333,13 +334,13 @@ export default function StagesScreen() {
                           ]}>
                             {isOverdue
                               ? isOverdueEnd
-                                ? `${t('stages.overdueSince')} ${format(endDate!, 'MMM d')}`
-                                : `${t('stages.shouldHaveStarted')} ${format(startDate!, 'MMM d')}`
+                                ? `${t('stages.overdueSince')} ${formatDate(endDate!, 'short')}`
+                                : `${t('stages.shouldHaveStarted')} ${formatDate(startDate!, 'short')}`
                               : stage.planned_start_date && stage.planned_end_date
-                              ? `${format(new Date(stage.planned_start_date), 'MMM d')} - ${format(new Date(stage.planned_end_date), 'MMM d')}`
+                              ? `${formatDate(stage.planned_start_date, 'short')} - ${formatDate(stage.planned_end_date, 'short')}`
                               : stage.planned_start_date
-                              ? `${t('stages.starts')} ${format(new Date(stage.planned_start_date), 'MMM d')}`
-                              : `${t('stages.due')} ${format(new Date(stage.planned_end_date!), 'MMM d')}`}
+                              ? `${t('stages.starts')} ${formatDate(stage.planned_start_date, 'short')}`
+                              : `${t('stages.due')} ${formatDate(stage.planned_end_date!, 'short')}`}
                           </Text>
                         </View>
                       )}
@@ -418,7 +419,7 @@ export default function StagesScreen() {
                 <TouchableOpacity onPress={() => { resetForm(); setShowAddModal(false); }}>
                   <X size={24} color={colors.neutral[600]} />
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>New Stage</Text>
+                <Text style={styles.modalTitle}>{t('forms.newStage')}</Text>
                 <TouchableOpacity
                   onPress={handleCreateStage}
                   disabled={!formData.name.trim() || createStage.isPending}
@@ -429,7 +430,7 @@ export default function StagesScreen() {
                       (!formData.name.trim() || createStage.isPending) && styles.modalSaveTextDisabled,
                     ]}
                   >
-                    {createStage.isPending ? 'Saving...' : 'Save'}
+                    {createStage.isPending ? t('common.saving') : t('common.save')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -437,21 +438,21 @@ export default function StagesScreen() {
               <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* Basic Information Section */}
             <View style={styles.formSection}>
-              <Text style={styles.sectionHeader}>Basic Information</Text>
+              <Text style={styles.sectionHeader}>{t('forms.basicInfo')}</Text>
 
-              <Text style={styles.inputLabel}>Stage Name *</Text>
+              <Text style={styles.inputLabel}>{t('forms.stageNameRequired')}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g., Foundation Work"
+                placeholder={t('forms.stageNamePlaceholder')}
                 placeholderTextColor={colors.neutral[400]}
                 value={formData.name}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
               />
 
-              <Text style={styles.inputLabel}>Description</Text>
+              <Text style={styles.inputLabel}>{t('stages.description')}</Text>
               <TextInput
                 style={[styles.textInput, styles.textArea]}
-                placeholder="Describe what this stage involves..."
+                placeholder={t('forms.stageDescPlaceholder')}
                 placeholderTextColor={colors.neutral[400]}
                 value={formData.description}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
@@ -459,7 +460,7 @@ export default function StagesScreen() {
                 numberOfLines={3}
               />
 
-              <Text style={styles.inputLabel}>Category</Text>
+              <Text style={styles.inputLabel}>{t('stages.category')}</Text>
               <View style={styles.segmentedControl}>
                 {STAGE_CATEGORIES.slice(0, 4).map((cat) => (
                   <TouchableOpacity
@@ -505,7 +506,7 @@ export default function StagesScreen() {
                 ))}
               </View>
 
-              <Text style={[styles.inputLabel, { marginTop: 8 }]}>Status</Text>
+              <Text style={[styles.inputLabel, { marginTop: 8 }]}>{t('stages.status')}</Text>
               <View style={styles.segmentedControl}>
                 {STATUS_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -534,33 +535,33 @@ export default function StagesScreen() {
             <View style={styles.formSection}>
               <View style={styles.sectionHeaderRow}>
                 <Calendar size={16} color={colors.neutral[500]} />
-                <Text style={styles.sectionHeaderText}>Timeline</Text>
+                <Text style={styles.sectionHeaderText}>{t('forms.timeline')}</Text>
               </View>
 
               <View style={styles.dateRow}>
                 <View style={styles.dateField}>
-                  <Text style={styles.inputLabel}>Start Date</Text>
+                  <Text style={styles.inputLabel}>{t('stages.startDate')}</Text>
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => openDatePicker('planned_start_date')}
                   >
                     <Text style={formData.planned_start_date ? styles.dateText : styles.datePlaceholder}>
                       {formData.planned_start_date
-                        ? format(new Date(formData.planned_start_date), 'MMM d, yyyy')
-                        : 'Select'}
+                        ? formatDate(formData.planned_start_date, 'long')
+                        : t('common.select')}
                     </Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.dateField}>
-                  <Text style={styles.inputLabel}>End Date</Text>
+                  <Text style={styles.inputLabel}>{t('stages.endDate')}</Text>
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => openDatePicker('planned_end_date')}
                   >
                     <Text style={formData.planned_end_date ? styles.dateText : styles.datePlaceholder}>
                       {formData.planned_end_date
-                        ? format(new Date(formData.planned_end_date), 'MMM d, yyyy')
-                        : 'Select'}
+                        ? formatDate(formData.planned_end_date, 'long')
+                        : t('common.select')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -580,10 +581,10 @@ export default function StagesScreen() {
             <View style={styles.formSection}>
               <View style={styles.sectionHeaderRow}>
                 <DollarSign size={16} color={colors.neutral[500]} />
-                <Text style={styles.sectionHeaderText}>Budget</Text>
+                <Text style={styles.sectionHeaderText}>{t('forms.budget')}</Text>
               </View>
 
-              <Text style={styles.inputLabel}>Estimated Cost</Text>
+              <Text style={styles.inputLabel}>{t('forms.estimatedCost')}</Text>
               <TextInput
                 style={styles.textInput}
                 placeholder="0.00"
@@ -598,7 +599,7 @@ export default function StagesScreen() {
             <View style={styles.formSection}>
               <View style={styles.sectionHeaderRow}>
                 <Users size={16} color={colors.neutral[500]} />
-                <Text style={styles.sectionHeaderText}>Assigned Suppliers</Text>
+                <Text style={styles.sectionHeaderText}>{t('forms.assignedSuppliers')}</Text>
               </View>
 
               <TouchableOpacity
@@ -607,8 +608,8 @@ export default function StagesScreen() {
               >
                 <Text style={selectedSupplierNames.length > 0 ? styles.selectorText : styles.selectorPlaceholder}>
                   {selectedSupplierNames.length > 0
-                    ? `${selectedSupplierNames.length} supplier${selectedSupplierNames.length > 1 ? 's' : ''} selected`
-                    : 'Select suppliers'}
+                    ? `${selectedSupplierNames.length} ${t('forms.suppliersSelected')}`
+                    : t('forms.selectSuppliers')}
                 </Text>
                 <ChevronRight size={18} color={colors.neutral[400]} />
               </TouchableOpacity>
@@ -640,10 +641,10 @@ export default function StagesScreen() {
               <View style={styles.formSection}>
                 <View style={styles.sectionHeaderRow}>
                   <AlertCircle size={16} color={colors.neutral[500]} />
-                  <Text style={styles.sectionHeaderText}>Dependencies</Text>
+                  <Text style={styles.sectionHeaderText}>{t('forms.dependencies')}</Text>
                 </View>
                 <Text style={styles.sectionSubtext}>
-                  Select stages that must be completed before this one
+                  {t('forms.dependenciesHint')}
                 </Text>
 
                 <TouchableOpacity
@@ -652,8 +653,8 @@ export default function StagesScreen() {
                 >
                   <Text style={selectedDependencyNames.length > 0 ? styles.selectorText : styles.selectorPlaceholder}>
                     {selectedDependencyNames.length > 0
-                      ? `${selectedDependencyNames.length} dependenc${selectedDependencyNames.length > 1 ? 'ies' : 'y'} selected`
-                      : 'Select dependencies'}
+                      ? `${selectedDependencyNames.length} ${t('forms.dependenciesSelected')}`
+                      : t('forms.selectDependencies')}
                   </Text>
                   <ChevronRight size={18} color={colors.neutral[400]} />
                 </TouchableOpacity>
@@ -693,7 +694,7 @@ export default function StagesScreen() {
                 <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
                   <ChevronLeft size={24} color={colors.neutral[600]} />
                 </TouchableOpacity>
-                <Text style={styles.selectionTitle}>Select Suppliers</Text>
+                <Text style={styles.selectionTitle}>{t('forms.selectSupplierTitle')}</Text>
                 <View style={styles.headerSpacer} />
               </View>
               {suppliers && suppliers.length > 0 ? (
@@ -725,7 +726,7 @@ export default function StagesScreen() {
                 />
               ) : (
                 <View style={styles.selectionEmpty}>
-                  <Text style={styles.selectionEmptyText}>No suppliers added to this project</Text>
+                  <Text style={styles.selectionEmptyText}>{t('forms.noSuppliersAdded')}</Text>
                 </View>
               )}
             </View>
@@ -738,7 +739,7 @@ export default function StagesScreen() {
                 <TouchableOpacity onPress={() => setModalView('form')} style={styles.backButton}>
                   <ChevronLeft size={24} color={colors.neutral[600]} />
                 </TouchableOpacity>
-                <Text style={styles.selectionTitle}>Select Dependencies</Text>
+                <Text style={styles.selectionTitle}>{t('forms.selectDependencyTitle')}</Text>
                 <View style={styles.headerSpacer} />
               </View>
               {stages && stages.length > 0 ? (
@@ -754,7 +755,7 @@ export default function StagesScreen() {
                       <View style={styles.selectionItemContent}>
                         <Text style={styles.selectionItemText}>{item.name}</Text>
                         <Text style={styles.selectionItemSubtext}>
-                          {item.status === 'completed' ? 'Completed' : item.status === 'in-progress' ? 'In Progress' : 'Not Started'}
+                          {item.status === 'completed' ? t('stages.completed') : item.status === 'in-progress' ? t('stages.inProgress') : t('stages.notStarted')}
                         </Text>
                       </View>
                       <View style={[
@@ -770,7 +771,7 @@ export default function StagesScreen() {
                 />
               ) : (
                 <View style={styles.selectionEmpty}>
-                  <Text style={styles.selectionEmptyText}>No other stages to depend on</Text>
+                  <Text style={styles.selectionEmptyText}>{t('forms.noOtherStages')}</Text>
                 </View>
               )}
             </View>

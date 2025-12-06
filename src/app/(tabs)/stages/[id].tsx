@@ -35,35 +35,39 @@ import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { StageStatus } from '../../../types/database';
-import { formatCurrency } from '../../../utils/formatters';
-import { format } from 'date-fns';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  'site-work': 'Site Work',
-  'foundation': 'Foundation',
-  'framing': 'Framing',
-  'plumbing': 'Plumbing',
-  'electrical': 'Electrical',
-  'hvac': 'HVAC',
-  'insulation': 'Insulation',
-  'drywall': 'Drywall',
-  'interior': 'Interior',
-  'exterior': 'Exterior',
-  'landscaping': 'Landscaping',
-  'other': 'Other',
-};
-
-const STATUS_OPTIONS: { label: string; value: StageStatus; icon: any }[] = [
-  { label: 'Not Started', value: 'not-started', icon: Circle },
-  { label: 'In Progress', value: 'in-progress', icon: Clock },
-  { label: 'Completed', value: 'completed', icon: Check },
-];
+import { useCurrency } from '../../../stores/CurrencyContext';
 
 export default function StageDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentProject } = useProject();
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  const { formatAmount } = useCurrency();
+
+  // Define category labels inside component to access translations
+  const CATEGORY_LABELS: Record<string, string> = {
+    'site-work': t('stages.categories.siteWork'),
+    'foundation': t('stages.categories.structure'),
+    'framing': t('stages.categories.structure'),
+    'plumbing': t('stages.categories.utilities'),
+    'electrical': t('stages.categories.utilities'),
+    'hvac': t('stages.categories.utilities'),
+    'insulation': t('stages.categories.interior'),
+    'drywall': t('stages.categories.interior'),
+    'interior': t('stages.categories.interior'),
+    'exterior': t('stages.categories.exterior'),
+    'landscaping': t('stages.categories.exterior'),
+    'utilities': t('stages.categories.utilities'),
+    'structure': t('stages.categories.structure'),
+    'finishing': t('stages.categories.finishing'),
+    'other': t('stages.categories.other'),
+  };
+
+  const STATUS_OPTIONS: { label: string; value: StageStatus; icon: any }[] = [
+    { label: t('stages.notStarted'), value: 'not-started', icon: Circle },
+    { label: t('stages.inProgress'), value: 'in-progress', icon: Clock },
+    { label: t('stages.completed'), value: 'completed', icon: Check },
+  ];
   const { data: stages } = useStages(currentProject?.id);
   const { data: suppliers } = useSuppliers(currentProject?.id);
   const { data: todos } = useTodos(currentProject?.id);
@@ -104,11 +108,11 @@ export default function StageDetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Stage</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.stage')}</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Stage not found</Text>
+          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('errors.stageNotFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -125,7 +129,7 @@ export default function StageDetailScreen() {
         updates: { status: newStatus },
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update status');
+      Alert.alert(t('common.error'), t('errors.failedUpdateStatus'));
     }
   };
 
@@ -140,25 +144,25 @@ export default function StageDetailScreen() {
       });
       setIsEditing(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update stage');
+      Alert.alert(t('common.error'), t('errors.failedUpdateStage'));
     }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Stage',
-      'Are you sure you want to delete this stage? This action cannot be undone.',
+      t('alerts.deleteStageTitle'),
+      t('alerts.deleteStageMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteStage.mutateAsync(stage.id);
               router.back();
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete stage');
+              Alert.alert(t('common.error'), t('errors.failedDeleteStage'));
             }
           },
         },
@@ -185,14 +189,14 @@ export default function StageDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Stage Details</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.stageDetails')}</Text>
         {isEditing ? (
           <TouchableOpacity onPress={handleSave}>
-            <Text style={styles.saveButton}>Save</Text>
+            <Text style={styles.saveButton}>{t('common.save')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={() => setIsEditing(true)}>
-            <Text style={styles.editButton}>Edit</Text>
+            <Text style={styles.editButton}>{t('common.edit')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -206,14 +210,14 @@ export default function StageDetailScreen() {
                 style={[styles.nameInput, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={editedName}
                 onChangeText={setEditedName}
-                placeholder="Stage name"
+                placeholder={t('stages.stageName')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
               <TextInput
                 style={[styles.descriptionInput, { color: isDark ? colors.neutral[300] : colors.neutral[600] }]}
                 value={editedDescription}
                 onChangeText={setEditedDescription}
-                placeholder="Add description..."
+                placeholder={t('stages.descriptionPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 multiline
               />
@@ -229,8 +233,8 @@ export default function StageDetailScreen() {
           <View style={styles.badges}>
             <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
               <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                {stage.status === 'in-progress' ? 'In Progress' :
-                 stage.status === 'completed' ? 'Completed' : 'Not Started'}
+                {stage.status === 'in-progress' ? t('stages.inProgress') :
+                 stage.status === 'completed' ? t('stages.completed') : t('stages.notStarted')}
               </Text>
             </View>
             {stage.category && (
@@ -246,7 +250,7 @@ export default function StageDetailScreen() {
 
         {/* Status Selector */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Status</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('stages.status')}</Text>
           <View style={styles.statusOptions}>
             {STATUS_OPTIONS.map((option) => {
               const Icon = option.icon;
@@ -281,16 +285,16 @@ export default function StageDetailScreen() {
         {/* Planned Timeline */}
         {(stage.planned_start_date || stage.planned_end_date) && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Planned Timeline</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.plannedTimeline')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <Calendar size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
                 <View style={styles.cardRowContent}>
-                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Start Date</Text>
+                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('stages.startDate')}</Text>
                   <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
                     {stage.planned_start_date
-                      ? format(new Date(stage.planned_start_date), 'MMM d, yyyy')
-                      : 'Not set'}
+                      ? formatDate(stage.planned_start_date, 'long')
+                      : t('forms.notSet')}
                   </Text>
                 </View>
               </View>
@@ -298,11 +302,11 @@ export default function StageDetailScreen() {
               <View style={styles.cardRow}>
                 <Calendar size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
                 <View style={styles.cardRowContent}>
-                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>End Date</Text>
+                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('stages.endDate')}</Text>
                   <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
                     {stage.planned_end_date
-                      ? format(new Date(stage.planned_end_date), 'MMM d, yyyy')
-                      : 'Not set'}
+                      ? formatDate(stage.planned_end_date, 'long')
+                      : t('forms.notSet')}
                   </Text>
                 </View>
               </View>
@@ -313,16 +317,16 @@ export default function StageDetailScreen() {
         {/* Actual Timeline */}
         {(stage.actual_start_date || stage.actual_end_date) && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Actual Timeline</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.actualTimeline')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <Calendar size={18} color={colors.success[500]} />
                 <View style={styles.cardRowContent}>
-                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Started</Text>
+                  <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.started')}</Text>
                   <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
                     {stage.actual_start_date
-                      ? format(new Date(stage.actual_start_date), 'MMM d, yyyy')
-                      : 'Not started'}
+                      ? formatDate(stage.actual_start_date, 'long')
+                      : t('forms.notStartedYet')}
                   </Text>
                 </View>
               </View>
@@ -332,9 +336,9 @@ export default function StageDetailScreen() {
                   <View style={styles.cardRow}>
                     <Calendar size={18} color={colors.success[500]} />
                     <View style={styles.cardRowContent}>
-                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Completed</Text>
+                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.completedOn')}</Text>
                       <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                        {format(new Date(stage.actual_end_date), 'MMM d, yyyy')}
+                        {formatDate(stage.actual_end_date, 'long')}
                       </Text>
                     </View>
                   </View>
@@ -347,15 +351,15 @@ export default function StageDetailScreen() {
         {/* Budget */}
         {(stage.estimated_cost || actualCost > 0) && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Budget</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.budget')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               {stage.estimated_cost && (
                 <View style={styles.cardRow}>
                   <DollarSign size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
                   <View style={styles.cardRowContent}>
-                    <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Estimated Cost</Text>
+                    <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.estimatedCostLabel')}</Text>
                     <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                      {formatCurrency(stage.estimated_cost)}
+                      {formatAmount(stage.estimated_cost)}
                     </Text>
                   </View>
                 </View>
@@ -366,9 +370,9 @@ export default function StageDetailScreen() {
                   <View style={styles.cardRow}>
                     <DollarSign size={18} color={colors.primary[500]} />
                     <View style={styles.cardRowContent}>
-                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Actual Cost</Text>
+                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.actualCost')}</Text>
                       <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                        {formatCurrency(actualCost)}
+                        {formatAmount(actualCost)}
                       </Text>
                     </View>
                   </View>
@@ -384,13 +388,13 @@ export default function StageDetailScreen() {
                       <TrendingUp size={18} color={colors.danger[500]} />
                     )}
                     <View style={styles.cardRowContent}>
-                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Variance</Text>
+                      <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.variance')}</Text>
                       <Text style={[
                         styles.cardValue,
                         { color: costVariance >= 0 ? colors.success[600] : colors.danger[600] }
                       ]}>
-                        {costVariance >= 0 ? '-' : '+'}{formatCurrency(Math.abs(costVariance))}
-                        {costVariance >= 0 ? ' under' : ' over'} budget
+                        {costVariance >= 0 ? '-' : '+'}{formatAmount(Math.abs(costVariance))}
+                        {costVariance >= 0 ? ` ${t('forms.underBudget')}` : ` ${t('forms.overBudget')}`}
                       </Text>
                     </View>
                   </View>
@@ -403,7 +407,7 @@ export default function StageDetailScreen() {
         {/* Assigned Suppliers */}
         {assignedSuppliers.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Assigned Suppliers</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.assignedSuppliers')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               {assignedSuppliers.map((supplier, index) => (
                 <View key={supplier.id}>
@@ -426,7 +430,7 @@ export default function StageDetailScreen() {
         {/* Related Tasks */}
         {relatedTasks.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Related Tasks</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.relatedTasks')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               {relatedTasks.map((task, index) => (
                 <TouchableOpacity
@@ -449,8 +453,8 @@ export default function StageDetailScreen() {
                         {task.title}
                       </Text>
                       <Text style={[styles.cardLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                        {task.status === 'completed' ? 'Completed' :
-                         task.status === 'in-progress' ? 'In Progress' : 'Pending'}
+                        {task.status === 'completed' ? t('stages.completed') :
+                         task.status === 'in-progress' ? t('stages.inProgress') : t('forms.pending')}
                       </Text>
                     </View>
                   </View>
@@ -463,7 +467,7 @@ export default function StageDetailScreen() {
         {/* Notes */}
         {stage.notes && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Notes</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.notes')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <FileText size={18} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
@@ -479,7 +483,7 @@ export default function StageDetailScreen() {
         <View style={styles.section}>
           <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? colors.danger[900] : colors.danger[50], borderColor: isDark ? colors.danger[700] : colors.danger[200] }]} onPress={handleDelete}>
             <Trash2 size={18} color={isDark ? colors.danger[400] : colors.danger[600]} />
-            <Text style={[styles.deleteButtonText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>Delete Stage</Text>
+            <Text style={[styles.deleteButtonText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('forms.deleteStage')}</Text>
           </TouchableOpacity>
         </View>
 

@@ -16,23 +16,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Mail } from 'lucide-react-native';
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
+import { useLanguage } from '../../stores/LanguageContext';
 import { colors } from '../../config/theme';
 
 export default function ForgotPasswordScreen() {
   const { resetPassword } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleReset = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email');
+      Alert.alert(t('common.error'), t('errors.pleaseEnterEmail'));
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email');
+      Alert.alert(t('common.error'), t('errors.pleaseEnterValidEmail'));
       return;
     }
 
@@ -41,12 +43,12 @@ export default function ForgotPasswordScreen() {
       const { error } = await resetPassword(email);
 
       if (error) {
-        Alert.alert('Error', error.message);
+        Alert.alert(t('common.error'), error.message);
       } else {
         setSent(true);
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      Alert.alert(t('common.error'), t('errors.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -61,10 +63,10 @@ export default function ForgotPasswordScreen() {
               <Mail size={32} color="#22C55E" />
             </View>
             <Text style={[styles.successTitle, isDark && styles.successTitleDark]}>
-              Check your email
+              {t('auth.checkEmail')}
             </Text>
             <Text style={[styles.successText, isDark && styles.successTextDark]}>
-              We've sent reset instructions to{'\n'}
+              {t('auth.resetInstructions')}{'\n'}
               <Text style={styles.emailHighlight}>{email}</Text>
             </Text>
             <TouchableOpacity
@@ -72,7 +74,7 @@ export default function ForgotPasswordScreen() {
               onPress={() => router.replace('/(auth)/login')}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Back to Login</Text>
+              <Text style={styles.buttonText}>{t('auth.backToLogin')}</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -112,10 +114,10 @@ export default function ForgotPasswordScreen() {
 
             {/* Header */}
             <Text style={[styles.title, isDark && styles.titleDark]}>
-              Reset password
+              {t('auth.resetPassword')}
             </Text>
             <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
-              Enter your email and we'll send you a link to reset your password.
+              {t('auth.resetSubtitle')}
             </Text>
 
             {/* Form */}
@@ -125,7 +127,7 @@ export default function ForgotPasswordScreen() {
                   styles.input,
                   isDark && styles.inputDark,
                 ]}
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 value={email}
                 onChangeText={setEmail}
@@ -141,7 +143,7 @@ export default function ForgotPasswordScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Sending...' : 'Send Reset Link'}
+                  {loading ? t('auth.sendingLink') : t('auth.sendResetLink')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -149,7 +151,7 @@ export default function ForgotPasswordScreen() {
             {/* Back to login */}
             <View style={styles.footer}>
               <TouchableOpacity onPress={() => router.back()}>
-                <Text style={styles.footerLink}>Back to login</Text>
+                <Text style={styles.footerLink}>{t('auth.backToLoginLink')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

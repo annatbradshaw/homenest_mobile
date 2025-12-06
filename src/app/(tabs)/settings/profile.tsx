@@ -22,7 +22,7 @@ export default function ProfileScreen() {
     : user?.email || 'User';
 
   const handleSave = () => {
-    Alert.alert('Success', 'Profile updated successfully');
+    Alert.alert(t('common.success'), t('alerts.profileUpdated'));
     router.back();
   };
 
@@ -37,9 +37,9 @@ export default function ProfileScreen() {
           >
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Edit Profile</Text>
+          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('profile.title')}</Text>
           <TouchableOpacity onPress={handleSave}>
-            <Text style={styles.saveButton}>Save</Text>
+            <Text style={styles.saveButton}>{t('common.save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -52,51 +52,51 @@ export default function ProfileScreen() {
           </View>
           <TouchableOpacity style={[styles.changePhotoButton, { backgroundColor: isDark ? colors.primary[900] : colors.primary[50] }]}>
             <Camera size={16} color={colors.primary[600]} />
-            <Text style={styles.changePhotoText}>Change Photo</Text>
+            <Text style={styles.changePhotoText}>{t('profile.changePhoto')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>First Name</Text>
+            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('profile.firstName')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200], color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
               value={firstName}
               onChangeText={setFirstName}
-              placeholder="Enter first name"
+              placeholder={t('profile.enterFirstName')}
               placeholderTextColor={colors.neutral[400]}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>Last Name</Text>
+            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('profile.lastName')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200], color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
               value={lastName}
               onChangeText={setLastName}
-              placeholder="Enter last name"
+              placeholder={t('profile.enterLastName')}
               placeholderTextColor={colors.neutral[400]}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>Email</Text>
+            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('auth.email')}</Text>
             <TextInput
               style={[styles.input, styles.inputDisabled, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100], borderColor: isDark ? colors.neutral[700] : colors.neutral[200], color: isDark ? colors.neutral[400] : colors.neutral[500] }]}
               value={user?.email || ''}
               editable={false}
             />
-            <Text style={[styles.inputHint, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}>Email cannot be changed</Text>
+            <Text style={[styles.inputHint, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}>{t('profile.emailCannotChange')}</Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>Phone</Text>
+            <Text style={[styles.label, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('profile.phone')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200], color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
               value={phone}
               onChangeText={setPhone}
-              placeholder="Enter phone number"
+              placeholder={t('profile.enterPhone')}
               placeholderTextColor={colors.neutral[400]}
               keyboardType="phone-pad"
             />

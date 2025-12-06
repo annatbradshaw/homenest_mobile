@@ -11,10 +11,14 @@ import {
   Moon,
   ChevronLeft,
   Globe,
+  DollarSign,
+  Users,
+  Calendar,
 } from 'lucide-react-native';
 import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
+import { useCurrency } from '../../../stores/CurrencyContext';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -72,7 +76,8 @@ function SettingItem({
 export default function SettingsScreen() {
   const { user, profile, signOut } = useAuth();
   const { isDark, mode, colors } = useTheme();
-  const { t, language } = useLanguage();
+  const { t, language, dateFormat } = useLanguage();
+  const { currency } = useCurrency();
 
   const handleSignOut = () => {
     Alert.alert(t('settings.signOut'), t('settings.signOutConfirm'), [
@@ -179,6 +184,44 @@ export default function SettingsScreen() {
               title={t('settings.language')}
               subtitle={languageLabel}
               onPress={() => router.push('/(tabs)/settings/language')}
+              isDark={isDark}
+            />
+            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            <SettingItem
+              icon={<DollarSign size={20} color={isDark ? colors.neutral[300] : colors.neutral[600]} />}
+              title={t('settings.currency')}
+              subtitle={`${currency.code} (${currency.symbol})`}
+              onPress={() => router.push('/(tabs)/settings/currency')}
+              isDark={isDark}
+            />
+            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            <SettingItem
+              icon={<Calendar size={20} color={isDark ? colors.neutral[300] : colors.neutral[600]} />}
+              title={t('settings.dateFormat')}
+              subtitle={dateFormat.label}
+              onPress={() => router.push('/(tabs)/settings/dateformat')}
+              isDark={isDark}
+            />
+          </View>
+        </View>
+
+        {/* Team Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+            {t('settings.team')}
+          </Text>
+          <View style={[
+            styles.settingsCard,
+            {
+              backgroundColor: isDark ? colors.neutral[800] : '#fff',
+              borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+            }
+          ]}>
+            <SettingItem
+              icon={<Users size={20} color={colors.primary[600]} />}
+              title={t('settings.teamMembers')}
+              subtitle={t('settings.teamMembersDesc')}
+              onPress={() => router.push('/(tabs)/settings/team')}
               isDark={isDark}
             />
           </View>

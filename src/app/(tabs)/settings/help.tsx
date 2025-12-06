@@ -59,18 +59,18 @@ export default function HelpScreen() {
           >
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Help & Support</Text>
+          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('help.title')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         {/* Contact Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Contact Us</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('help.contactUs')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <HelpItem
               icon={<Mail size={20} color={colors.primary[600]} />}
-              title="Email Support"
-              description="Get help via email"
+              title={t('help.emailSupport')}
+              description={t('help.emailSupportDesc')}
               onPress={handleEmailSupport}
               isDark={isDark}
               colors={colors}
@@ -78,8 +78,8 @@ export default function HelpScreen() {
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <HelpItem
               icon={<MessageCircle size={20} color={colors.success[600]} />}
-              title="Live Chat"
-              description="Chat with our support team"
+              title={t('help.liveChat')}
+              description={t('help.liveChatDesc')}
               onPress={handleChat}
               isDark={isDark}
               colors={colors}
@@ -89,12 +89,12 @@ export default function HelpScreen() {
 
         {/* Resources Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Resources</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('help.resources')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <HelpItem
               icon={<FileText size={20} color={isDark ? colors.neutral[400] : colors.neutral[600]} />}
-              title="Documentation"
-              description="Learn how to use HomeNest"
+              title={t('help.documentation')}
+              description={t('help.documentationDesc')}
               onPress={handleDocs}
               isDark={isDark}
               colors={colors}
@@ -104,26 +104,26 @@ export default function HelpScreen() {
 
         {/* FAQ Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Frequently Asked Questions</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('help.faq')}</Text>
           <View style={[styles.faqCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.faqItem}>
-              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>How do I create a new project?</Text>
+              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('help.faqCreateProject')}</Text>
               <Text style={[styles.faqAnswer, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-                Tap the + button on the home screen or go to Projects and tap "New Project" to start tracking a renovation.
+                {t('help.faqCreateProjectAnswer')}
               </Text>
             </View>
             <View style={[styles.faqDivider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <View style={styles.faqItem}>
-              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Can I invite team members?</Text>
+              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('help.faqInviteTeam')}</Text>
               <Text style={[styles.faqAnswer, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-                Yes! Go to your project settings and tap "Team Members" to invite contractors or family members to collaborate.
+                {t('help.faqInviteTeamAnswer')}
               </Text>
             </View>
             <View style={[styles.faqDivider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <View style={styles.faqItem}>
-              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>How do I track expenses?</Text>
+              <Text style={[styles.faqQuestion, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('help.faqTrackExpenses')}</Text>
               <Text style={[styles.faqAnswer, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-                Navigate to the Budget tab and tap + to add expenses. You can categorize them by stage and attach receipts.
+                {t('help.faqTrackExpensesAnswer')}
               </Text>
             </View>
           </View>

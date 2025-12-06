@@ -60,12 +60,12 @@ export default function AddSupplierScreen() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('Error', 'Name is required');
+      Alert.alert(t('common.error'), t('errors.nameRequired'));
       return;
     }
 
     if (!currentProject?.id) {
-      Alert.alert('Error', 'No project selected');
+      Alert.alert(t('common.error'), t('errors.noProjectSelected'));
       return;
     }
 
@@ -86,7 +86,7 @@ export default function AddSupplierScreen() {
       });
       router.back();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create supplier');
+      Alert.alert(t('common.error'), t('errors.failedCreateSupplier'));
     } finally {
       setIsSubmitting(false);
     }
@@ -99,14 +99,14 @@ export default function AddSupplierScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Add Supplier</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('suppliers.addSupplier')}</Text>
         <TouchableOpacity
           onPress={handleSave}
           disabled={isSubmitting}
           style={styles.saveButtonContainer}
         >
           <Text style={[styles.saveButton, isSubmitting && { color: isDark ? colors.neutral[600] : colors.neutral[400] }]}>
-            {isSubmitting ? 'Creating...' : 'Create'}
+            {isSubmitting ? t('common.creating') : t('common.create')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -114,7 +114,7 @@ export default function AddSupplierScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Basic Information</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.basicInfo')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.inputRow}>
               <View style={styles.inputIcon}>
@@ -124,7 +124,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.name}
                 onChangeText={(value) => updateField('name', value)}
-                placeholder="Name *"
+                placeholder={t('forms.namePlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
             </View>
@@ -137,7 +137,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.company}
                 onChangeText={(value) => updateField('company', value)}
-                placeholder="Company"
+                placeholder={t('forms.companyPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
             </View>
@@ -146,7 +146,7 @@ export default function AddSupplierScreen() {
 
         {/* Contact Information */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Contact Information</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.contactInfo')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.inputRow}>
               <View style={styles.inputIcon}>
@@ -156,7 +156,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.phone}
                 onChangeText={(value) => updateField('phone', value)}
-                placeholder="+1 (555) 123-4567"
+                placeholder={t('forms.phonePlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 keyboardType="phone-pad"
               />
@@ -170,7 +170,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.email}
                 onChangeText={(value) => updateField('email', value)}
-                placeholder="john@abcconstruction.com"
+                placeholder={t('forms.emailPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -185,7 +185,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.address}
                 onChangeText={(value) => updateField('address', value)}
-                placeholder="123 Main St, City, State 12345"
+                placeholder={t('forms.addressPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
             </View>
@@ -194,14 +194,14 @@ export default function AddSupplierScreen() {
 
         {/* Professional Information */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Professional Information</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.professionalInfo')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.inputRow}>
               <TextInput
                 style={[styles.input, { paddingLeft: 16, color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.specialty}
                 onChangeText={(value) => updateField('specialty', value)}
-                placeholder="Specialty (Plumbing, Electrical, etc.)"
+                placeholder={t('forms.specialtyPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
             </View>
@@ -214,7 +214,7 @@ export default function AddSupplierScreen() {
                 style={[styles.input, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.contractValue}
                 onChangeText={(value) => updateField('contractValue', value)}
-                placeholder="Contract Value (0.00)"
+                placeholder={t('forms.contractValuePlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
                 keyboardType="decimal-pad"
               />
@@ -224,20 +224,20 @@ export default function AddSupplierScreen() {
 
         {/* Payment Terms and Rating */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Payment & Rating</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.paymentRating')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.inputRow}>
               <TextInput
                 style={[styles.input, { paddingLeft: 16, color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={formData.paymentTerms}
                 onChangeText={(value) => updateField('paymentTerms', value)}
-                placeholder="Payment Terms (Net 30, 50% upfront, etc.)"
+                placeholder={t('forms.paymentTermsPlaceholder')}
                 placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               />
             </View>
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <View style={styles.ratingRow}>
-              <Text style={[styles.ratingLabel, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Rating</Text>
+              <Text style={[styles.ratingLabel, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.rating')}</Text>
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
@@ -259,10 +259,10 @@ export default function AddSupplierScreen() {
 
         {/* Status */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Status</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.status')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Active Supplier</Text>
+              <Text style={[styles.toggleLabel, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.activeSupplier')}</Text>
               <Switch
                 value={formData.isActive}
                 onValueChange={(value) => updateField('isActive', value)}
@@ -277,10 +277,10 @@ export default function AddSupplierScreen() {
         {stages && stages.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-              <Layers size={14} color={isDark ? colors.neutral[400] : colors.neutral[500]} /> Assigned Stages
+              <Layers size={14} color={isDark ? colors.neutral[400] : colors.neutral[500]} /> {t('forms.assignedStages')}
             </Text>
             <Text style={[styles.sectionSubtitle, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
-              Select stages for this supplier to work on
+              {t('forms.selectStagesHint')}
             </Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               {stages.map((stage, index) => (
@@ -308,13 +308,13 @@ export default function AddSupplierScreen() {
 
         {/* Notes */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Notes</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.notes')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <TextInput
               style={[styles.textArea, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
               value={formData.notes}
               onChangeText={(value) => updateField('notes', value)}
-              placeholder="Additional notes about this supplier..."
+              placeholder={t('forms.notesPlaceholder')}
               placeholderTextColor={isDark ? colors.neutral[500] : colors.neutral[400]}
               multiline
               numberOfLines={4}

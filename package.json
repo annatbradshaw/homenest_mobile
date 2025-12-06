@@ -7,7 +7,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest --config jest.unit.config.js",
+    "test:unit": "jest --config jest.unit.config.js",
+    "test:watch": "jest --config jest.unit.config.js --watch"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -43,7 +45,19 @@
     "react-native-worklets-core": "^1.6.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "babel-jest": "^30.2.0",
+    "babel-preset-expo": "^54.0.8",
+    "jest": "^30.2.0",
+    "jest-expo": "^54.0.14",
+    "react-test-renderer": "^19.2.1",
+    "ts-jest": "^29.4.6",
     "typescript": "~5.9.2"
   },
   "private": true

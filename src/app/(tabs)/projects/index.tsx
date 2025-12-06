@@ -16,22 +16,23 @@ import { useProject } from '../../../stores/ProjectContext';
 import { LoadingSpinner, EmptyState } from '../../../components/ui';
 import { colors as themeColors } from '../../../config/theme';
 import { Project, ProjectStatus } from '../../../types/database';
-import { format } from 'date-fns';
-import { formatCurrency } from '../../../utils/formatters';
+import { useCurrency } from '../../../stores/CurrencyContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 
-const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Planning', value: 'planning' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'On Hold', value: 'on-hold' },
-];
-
 export default function ProjectsScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  const { formatAmount } = useCurrency();
+
+  // Define filters inside component to access translations
+  const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
+    { label: t('common.all'), value: 'all' },
+    { label: t('projects.planning'), value: 'planning' },
+    { label: t('projects.inProgress'), value: 'in-progress' },
+    { label: t('projects.completed'), value: 'completed' },
+    { label: t('projects.onHold'), value: 'on-hold' },
+  ];
   const { data: projects, isLoading, refetch } = useProjects();
   const { currentProject, setCurrentProject } = useProject();
   const [refreshing, setRefreshing] = useState(false);
@@ -51,13 +52,13 @@ export default function ProjectsScreen() {
   const getStatusStyle = (status: ProjectStatus) => {
     switch (status) {
       case 'in-progress':
-        return { bg: colors.primary[50], text: colors.primary[600], label: 'In Progress' };
+        return { bg: colors.primary[50], text: colors.primary[600], label: t('projects.inProgress') };
       case 'completed':
-        return { bg: colors.success[50], text: colors.success[600], label: 'Completed' };
+        return { bg: colors.success[50], text: colors.success[600], label: t('projects.completed') };
       case 'on-hold':
-        return { bg: colors.accent[50], text: colors.accent[600], label: 'On Hold' };
+        return { bg: colors.accent[50], text: colors.accent[600], label: t('projects.onHold') };
       case 'planning':
-        return { bg: colors.neutral[100], text: colors.neutral[600], label: 'Planning' };
+        return { bg: colors.neutral[100], text: colors.neutral[600], label: t('projects.planning') };
       default:
         return { bg: colors.neutral[100], text: colors.neutral[600], label: status };
     }
@@ -108,7 +109,7 @@ export default function ProjectsScreen() {
             <View style={styles.detailRow}>
               <Calendar size={14} color={isDark ? colors.neutral[400] : colors.neutral[400]} />
               <Text style={[styles.detailText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-                Due {format(new Date(project.target_completion_date), 'MMM d, yyyy')}
+                {t('projects.due')} {formatDate(project.target_completion_date, 'long')}
               </Text>
             </View>
           )}
@@ -116,8 +117,8 @@ export default function ProjectsScreen() {
           {budget > 0 && (
             <View style={styles.budgetSection}>
               <View style={styles.budgetRow}>
-                <Text style={[styles.budgetSpent, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatCurrency(spent)}</Text>
-                <Text style={[styles.budgetTotal, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}> / {formatCurrency(budget)}</Text>
+                <Text style={[styles.budgetSpent, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(spent)}</Text>
+                <Text style={[styles.budgetTotal, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}> / {formatAmount(budget)}</Text>
               </View>
               <View style={styles.progressBar}>
                 <View
@@ -182,13 +183,13 @@ export default function ProjectsScreen() {
 
       {/* Projects List */}
       {isLoading ? (
-        <LoadingSpinner fullScreen message="Loading projects..." />
+        <LoadingSpinner fullScreen message={t('projects.loadingProjects')} />
       ) : !filteredProjects?.length ? (
         <EmptyState
           icon={<FolderOpen size={48} color={isDark ? colors.neutral[600] : colors.neutral[400]} />}
-          title="No projects yet"
-          description="Create your first project to start managing your renovation."
-          actionLabel="Create Project"
+          title={t('projects.noProjectsYet')}
+          description={t('projects.createProjectDesc')}
+          actionLabel={t('projects.createProject')}
           onAction={() => router.push('/(tabs)/projects/new')}
         />
       ) : (

@@ -18,14 +18,6 @@ import { colors as themeColors } from '../../../config/theme';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 
-const SPECIALTY_FILTERS = [
-  { label: 'All', value: 'all' },
-  { label: 'Contractor', value: 'contractor' },
-  { label: 'Electrician', value: 'electrician' },
-  { label: 'Plumber', value: 'plumber' },
-  { label: 'Architect', value: 'architect' },
-  { label: 'Designer', value: 'designer' },
-];
 
 const specialtyColors: Record<string, { bg: string; darkBg: string; text: string; darkText: string }> = {
   contractor: { bg: themeColors.primary[50], darkBg: 'rgba(96, 165, 250, 0.2)', text: themeColors.primary[600], darkText: themeColors.primary[400] },
@@ -40,6 +32,17 @@ const specialtyColors: Record<string, { bg: string; darkBg: string; text: string
 export default function SuppliersScreen() {
   const { isDark, colors } = useTheme();
   const { t } = useLanguage();
+
+  // Define filters inside component to access translations
+  const SPECIALTY_FILTERS = [
+    { label: t('suppliers.specialties.all'), value: 'all' },
+    { label: t('suppliers.specialties.contractor'), value: 'contractor' },
+    { label: t('suppliers.specialties.electrician'), value: 'electrician' },
+    { label: t('suppliers.specialties.plumber'), value: 'plumber' },
+    { label: t('suppliers.specialties.architect'), value: 'architect' },
+    { label: t('suppliers.specialties.designer'), value: 'designer' },
+  ];
+
   const { currentProject } = useProject();
   const { data: suppliers, isLoading, refetch } = useSuppliers(currentProject?.id);
   const [refreshing, setRefreshing] = useState(false);
@@ -100,8 +103,8 @@ export default function SuppliersScreen() {
         </View>
         <EmptyState
           icon={<Building2 size={48} color={colors.neutral[400]} />}
-          title="No Project Selected"
-          description="Select a project to view suppliers."
+          title={t('suppliers.noProjectSelected')}
+          description={t('suppliers.selectProjectDesc')}
         />
       </SafeAreaView>
     );
@@ -174,7 +177,7 @@ export default function SuppliersScreen() {
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{suppliers?.length || 0}</Text>
-              <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Total</Text>
+              <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('suppliers.total')}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <Text style={[styles.statValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
@@ -182,7 +185,7 @@ export default function SuppliersScreen() {
                   ? (suppliers.reduce((sum, s) => sum + (s.rating || 0), 0) / suppliers.length).toFixed(1)
                   : '-'}
               </Text>
-              <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Avg Rating</Text>
+              <Text style={[styles.statLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('suppliers.avgRating')}</Text>
             </View>
           </View>
 
@@ -190,11 +193,11 @@ export default function SuppliersScreen() {
           {!filteredSuppliers || filteredSuppliers.length === 0 ? (
             <EmptyState
               icon={<Building2 size={48} color={colors.neutral[400]} />}
-              title="No Suppliers"
+              title={t('suppliers.noSuppliers')}
               description={specialtyFilter === 'all'
-                ? "Add contractors and vendors to your project."
-                : `No ${specialtyFilter}s found.`}
-              actionLabel="Add Supplier"
+                ? t('suppliers.addContractorsDesc')
+                : t('suppliers.noSpecialtyFound', { specialty: specialtyFilter })}
+              actionLabel={t('suppliers.addSupplier')}
               onAction={() => router.push('/(tabs)/suppliers/add')}
             />
           ) : (
@@ -255,7 +258,7 @@ export default function SuppliersScreen() {
                               onPress={() => handleCall(supplier.phone!)}
                             >
                               <Phone size={16} color={isDark ? colors.primary[400] : colors.primary[600]} />
-                              <Text style={[styles.actionButtonText, { color: isDark ? colors.primary[400] : colors.primary[600] }]}>Call</Text>
+                              <Text style={[styles.actionButtonText, { color: isDark ? colors.primary[400] : colors.primary[600] }]}>{t('suppliers.call')}</Text>
                             </TouchableOpacity>
                           )}
                           {supplier.email && (
@@ -271,7 +274,7 @@ export default function SuppliersScreen() {
                               onPress={() => handleEmail(supplier.email!)}
                             >
                               <Mail size={16} color={isDark ? colors.primary[400] : colors.primary[600]} />
-                              <Text style={[styles.actionButtonText, { color: isDark ? colors.primary[400] : colors.primary[600] }]}>Email</Text>
+                              <Text style={[styles.actionButtonText, { color: isDark ? colors.primary[400] : colors.primary[600] }]}>{t('suppliers.email')}</Text>
                             </TouchableOpacity>
                           )}
                         </View>

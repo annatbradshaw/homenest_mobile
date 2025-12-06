@@ -110,10 +110,7 @@ export default function LanguageScreen() {
 
         {/* Info */}
         <Text style={[styles.infoText, { color: isDark ? colors.neutral[500] : colors.neutral[400] }]}>
-          {language === 'pl'
-            ? 'Aplikacja zostanie przetłumaczona po zmianie języka.'
-            : 'The app will be translated after changing the language.'
-          }
+          {t('language.infoText')}
         </Text>
       </ScrollView>
     </SafeAreaView>

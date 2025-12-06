@@ -30,27 +30,28 @@ import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { TodoStatus, TodoPriority } from '../../../types/database';
-import { format } from 'date-fns';
-
-const STATUS_OPTIONS: { label: string; value: TodoStatus; icon: any }[] = [
-  { label: 'To Do', value: 'todo', icon: Circle },
-  { label: 'In Progress', value: 'in-progress', icon: Clock },
-  { label: 'Done', value: 'completed', icon: CheckCircle2 },
-  { label: 'Cancelled', value: 'cancelled', icon: XCircle },
-];
-
-const PRIORITY_OPTIONS: { label: string; value: TodoPriority; color: string }[] = [
-  { label: 'Low', value: 'low', color: themeColors.neutral[400] },
-  { label: 'Medium', value: 'medium', color: themeColors.primary[500] },
-  { label: 'High', value: 'high', color: themeColors.accent[500] },
-  { label: 'Urgent', value: 'urgent', color: themeColors.danger[500] },
-];
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentProject } = useProject();
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+
+  // Define options inside component to access translations
+  const STATUS_OPTIONS: { label: string; value: TodoStatus; icon: any }[] = [
+    { label: t('todos.todo'), value: 'todo', icon: Circle },
+    { label: t('todos.inProgress'), value: 'in-progress', icon: Clock },
+    { label: t('todos.done'), value: 'completed', icon: CheckCircle2 },
+    { label: t('todos.cancelled'), value: 'cancelled', icon: XCircle },
+  ];
+
+  const PRIORITY_OPTIONS: { label: string; value: TodoPriority; color: string }[] = [
+    { label: t('todos.priorities.low'), value: 'low', color: themeColors.neutral[400] },
+    { label: t('todos.priorities.medium'), value: 'medium', color: themeColors.primary[500] },
+    { label: t('todos.priorities.high'), value: 'high', color: themeColors.accent[500] },
+    { label: t('todos.priorities.urgent'), value: 'urgent', color: themeColors.danger[500] },
+  ];
+
   const { data: todos } = useTodos(currentProject?.id);
   const { data: stages } = useStages(currentProject?.id);
   const { data: teamMembers } = useTeamMembers();
@@ -69,11 +70,11 @@ export default function TaskDetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Task</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('todos.task')}</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Task not found</Text>
+          <Text style={[styles.emptyText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.taskNotFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -89,7 +90,7 @@ export default function TaskDetailScreen() {
         updates: { status: newStatus },
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update status');
+      Alert.alert(t('common.error'), t('errors.failedUpdateStatus'));
     }
   };
 
@@ -100,7 +101,7 @@ export default function TaskDetailScreen() {
         updates: { priority: newPriority },
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update priority');
+      Alert.alert(t('common.error'), t('errors.failedUpdateTask'));
     }
   };
 
@@ -115,25 +116,25 @@ export default function TaskDetailScreen() {
       });
       setIsEditing(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update task');
+      Alert.alert(t('common.error'), t('errors.failedUpdateTask'));
     }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Task',
-      'Are you sure you want to delete this task?',
+      t('alerts.deleteTaskTitle'),
+      t('alerts.deleteTaskMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteTodo.mutateAsync(task.id);
               router.back();
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete task');
+              Alert.alert(t('common.error'), t('errors.failedDeleteTask'));
             }
           },
         },
@@ -167,14 +168,14 @@ export default function TaskDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Task Details</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('todos.taskDetails')}</Text>
         {isEditing ? (
           <TouchableOpacity onPress={handleSave}>
-            <Text style={styles.saveButton}>Save</Text>
+            <Text style={styles.saveButton}>{t('common.save')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={() => setIsEditing(true)}>
-            <Text style={styles.editButton}>Edit</Text>
+            <Text style={styles.editButton}>{t('common.edit')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -188,14 +189,14 @@ export default function TaskDetailScreen() {
                 style={[styles.titleInput, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
                 value={editedTitle}
                 onChangeText={setEditedTitle}
-                placeholder="Task title"
+                placeholder={t('todos.taskTitle')}
                 placeholderTextColor={colors.neutral[400]}
               />
               <TextInput
                 style={[styles.descriptionInput, { color: isDark ? colors.neutral[300] : colors.neutral[600] }]}
                 value={editedDescription}
                 onChangeText={setEditedDescription}
-                placeholder="Add description..."
+                placeholder={t('todos.descriptionPlaceholder')}
                 placeholderTextColor={colors.neutral[400]}
                 multiline
               />
@@ -217,9 +218,9 @@ export default function TaskDetailScreen() {
           <View style={styles.badges}>
             <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
               <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                {task.status === 'in-progress' ? 'In Progress' :
-                 task.status === 'completed' ? 'Done' :
-                 task.status === 'cancelled' ? 'Cancelled' : 'To Do'}
+                {task.status === 'in-progress' ? t('todos.inProgress') :
+                 task.status === 'completed' ? t('todos.done') :
+                 task.status === 'cancelled' ? t('todos.cancelled') : t('todos.todo')}
               </Text>
             </View>
             <View style={[styles.priorityBadge, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
@@ -231,7 +232,7 @@ export default function TaskDetailScreen() {
 
         {/* Status Selector */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Status</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.status')}</Text>
           <View style={styles.statusOptions}>
             {STATUS_OPTIONS.slice(0, 3).map((option) => {
               const Icon = option.icon;
@@ -265,7 +266,7 @@ export default function TaskDetailScreen() {
 
         {/* Priority Selector */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Priority</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.priority')}</Text>
           <View style={styles.priorityOptions}>
             {PRIORITY_OPTIONS.map((option) => {
               const isActive = task.priority === option.value;
@@ -296,12 +297,12 @@ export default function TaskDetailScreen() {
         {/* Due Date */}
         {task.due_date && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Due Date</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.dueDate')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <Calendar size={18} color={colors.neutral[400]} />
                 <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                  {format(new Date(task.due_date), 'MMMM d, yyyy')}
+                  {formatDate(task.due_date, 'long')}
                 </Text>
               </View>
             </View>
@@ -311,7 +312,7 @@ export default function TaskDetailScreen() {
         {/* Assignee */}
         {assignee && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Assigned To</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.assignedTo')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               <View style={styles.cardRow}>
                 <User size={18} color={colors.neutral[400]} />
@@ -327,7 +328,7 @@ export default function TaskDetailScreen() {
         {/* Linked Stages */}
         {linkedStages.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Linked Stages</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.linkedStages')}</Text>
             <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
               {linkedStages.map((stage, index) => (
                 <View key={stage.id}>
@@ -348,7 +349,7 @@ export default function TaskDetailScreen() {
         {/* Tags */}
         {task.tags && task.tags.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Tags</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.tags')}</Text>
             <View style={styles.tagsContainer}>
               {task.tags.map((tag) => (
                 <View key={tag} style={styles.tag}>
@@ -364,7 +365,7 @@ export default function TaskDetailScreen() {
         <View style={styles.section}>
           <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? colors.danger[900] : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
             <Trash2 size={18} color={colors.danger[600]} />
-            <Text style={styles.deleteButtonText}>Delete Task</Text>
+            <Text style={styles.deleteButtonText}>{t('todos.deleteTask')}</Text>
           </TouchableOpacity>
         </View>
 

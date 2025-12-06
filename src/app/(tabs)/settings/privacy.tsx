@@ -21,61 +21,61 @@ export default function PrivacyScreen() {
           >
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Privacy Policy</Text>
+          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.title')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={[styles.lastUpdated, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Last updated: December 2024</Text>
+          <Text style={[styles.lastUpdated, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('privacy.lastUpdated')}</Text>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Introduction</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.introduction')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              HomeNest ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
+              {t('privacy.introText')}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Information We Collect</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.infoCollected')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              We collect information you provide directly to us, such as when you create an account, update your profile, or contact us for support.
+              {t('privacy.infoCollectedText')}
             </Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Account information (name, email, phone)</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Project data (renovation details, budgets, tasks)</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Supplier information you add</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Photos and documents you upload</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.accountInfo')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.projectData')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.supplierInfo')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.photosDocuments')}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>How We Use Your Information</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.howWeUse')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              We use the information we collect to:
+              {t('privacy.howWeUseText')}
             </Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Provide and maintain our services</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Send you notifications and updates</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Respond to your requests and support needs</Text>
-            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• Improve our application</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.provideServices')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.sendNotifications')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.respondRequests')}</Text>
+            <Text style={[styles.bulletPoint, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>• {t('privacy.improveApp')}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Data Security</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.dataSecurity')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              We implement appropriate security measures to protect your personal information. Your data is encrypted in transit and at rest. We use industry-standard security protocols to safeguard your information.
-            </Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Your Rights</Text>
-            <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              You have the right to access, correct, or delete your personal information at any time. You can do this through the app settings or by contacting our support team.
+              {t('privacy.dataSecurityText')}
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Contact Us</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.yourRights')}</Text>
             <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-              If you have questions about this Privacy Policy, please contact us at privacy@homenest.app
+              {t('privacy.yourRightsText')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('privacy.contactUs')}</Text>
+            <Text style={[styles.paragraph, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
+              {t('privacy.contactUsText')}
             </Text>
           </View>
         </View>

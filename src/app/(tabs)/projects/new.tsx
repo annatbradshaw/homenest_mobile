@@ -20,15 +20,17 @@ import { ProjectStatus } from '../../../types/database';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 
-const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
-  { label: 'Planning', value: 'planning' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'On Hold', value: 'on-hold' },
-];
-
 export default function NewProjectScreen() {
   const { isDark, colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
+
+  // Define options inside component to access translations
+  const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
+    { label: t('projects.planning'), value: 'planning' },
+    { label: t('projects.inProgress'), value: 'in-progress' },
+    { label: t('projects.onHold'), value: 'on-hold' },
+  ];
+
   const createProject = useCreateProject();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -44,7 +46,7 @@ export default function NewProjectScreen() {
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!name.trim()) {
-      newErrors.name = 'Project name is required';
+      newErrors.name = t('errors.projectNameRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,17 +68,13 @@ export default function NewProjectScreen() {
 
       router.replace(`/(tabs)/projects/${project.id}`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to create project');
+      Alert.alert(t('common.error'), t('errors.failedCreateProject'));
     }
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return 'Select date';
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  const formatDateLocal = (date: Date | null) => {
+    if (!date) return t('forms.selectDate');
+    return formatDate(date, 'long');
   };
 
   return (
@@ -90,7 +88,7 @@ export default function NewProjectScreen() {
           <TouchableOpacity onPress={() => router.back()}>
             <X size={24} color={isDark ? colors.neutral[400] : colors.neutral[700]} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>New Project</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('projects.newProject')}</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -101,17 +99,17 @@ export default function NewProjectScreen() {
         >
           {/* Basic Info */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Basic Information</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.basicInfo')}</Text>
             <Input
-              label="Project Name"
-              placeholder="e.g., Kitchen Renovation"
+              label={t('projects.projectName')}
+              placeholder={t('projects.projectNamePlaceholder')}
               value={name}
               onChangeText={setName}
               error={errors.name}
             />
             <Input
-              label="Description (optional)"
-              placeholder="Brief project description..."
+              label={`${t('forms.descriptionLabel')} (${t('common.optional')})`}
+              placeholder={t('forms.descriptionPlaceholder')}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -119,8 +117,8 @@ export default function NewProjectScreen() {
               style={styles.textArea}
             />
             <Input
-              label="Address (optional)"
-              placeholder="Project location"
+              label={`${t('projects.address')} (${t('common.optional')})`}
+              placeholder={t('projects.addressPlaceholder')}
               value={address}
               onChangeText={setAddress}
               leftIcon={<MapPin size={20} color={isDark ? colors.neutral[500] : colors.neutral[400]} />}
@@ -129,9 +127,9 @@ export default function NewProjectScreen() {
 
           {/* Budget */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Budget</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.budget')}</Text>
             <Input
-              label="Total Budget (optional)"
+              label={`${t('projects.totalBudget')} (${t('common.optional')})`}
               placeholder="0.00"
               value={budget}
               onChangeText={(text) => setBudget(text.replace(/[^0-9.]/g, ''))}
@@ -142,9 +140,9 @@ export default function NewProjectScreen() {
 
           {/* Dates */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Timeline</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.timeline')}</Text>
 
-            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>Start Date (optional)</Text>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('projects.startDate')} ({t('common.optional')})</Text>
             <TouchableOpacity
               style={[
                 styles.dateButton,
@@ -163,11 +161,11 @@ export default function NewProjectScreen() {
                   !startDate && [styles.dateButtonPlaceholder, { color: isDark ? colors.neutral[500] : colors.neutral[400] }],
                 ]}
               >
-                {formatDate(startDate)}
+                {formatDateLocal(startDate)}
               </Text>
             </TouchableOpacity>
 
-            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>Target Completion (optional)</Text>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[700] }]}>{t('projects.targetEndDate')} ({t('common.optional')})</Text>
             <TouchableOpacity
               style={[
                 styles.dateButton,
@@ -186,14 +184,14 @@ export default function NewProjectScreen() {
                   !targetDate && [styles.dateButtonPlaceholder, { color: isDark ? colors.neutral[500] : colors.neutral[400] }],
                 ]}
               >
-                {formatDate(targetDate)}
+                {formatDateLocal(targetDate)}
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Status */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Status</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.status')}</Text>
             <View style={styles.statusOptions}>
               {STATUS_OPTIONS.map((option) => (
                 <TouchableOpacity
@@ -228,7 +226,7 @@ export default function NewProjectScreen() {
         {/* Footer */}
         <View style={[styles.footer, { borderTopColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
           <Button
-            title="Create Project"
+            title={t('onboarding.createProject')}
             onPress={handleCreate}
             loading={createProject.isPending}
             fullWidth

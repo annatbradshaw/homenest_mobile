@@ -9,6 +9,7 @@ import { AuthProvider } from '../stores/AuthContext';
 import { ProjectProvider } from '../stores/ProjectContext';
 import { ThemeProvider, useTheme } from '../stores/ThemeContext';
 import { LanguageProvider } from '../stores/LanguageContext';
+import { CurrencyProvider } from '../stores/CurrencyContext';
 import { AnimatedSplash } from '../components/AnimatedSplash';
 import { colors } from '../config/theme';
 
@@ -86,14 +87,16 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <LanguageProvider>
-              <AuthProvider>
-                <ProjectProvider>
-                  <RootLayoutNav />
-                  {!splashAnimationComplete && (
-                    <AnimatedSplash onAnimationComplete={handleSplashAnimationComplete} />
-                  )}
-                </ProjectProvider>
-              </AuthProvider>
+              <CurrencyProvider>
+                <AuthProvider>
+                  <ProjectProvider>
+                    <RootLayoutNav />
+                    {!splashAnimationComplete && (
+                      <AnimatedSplash onAnimationComplete={handleSplashAnimationComplete} />
+                    )}
+                  </ProjectProvider>
+                </AuthProvider>
+              </CurrencyProvider>
             </LanguageProvider>
           </ThemeProvider>
         </QueryClientProvider>

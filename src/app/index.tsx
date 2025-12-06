@@ -4,9 +4,11 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../stores/AuthContext';
 import { LoadingSpinner } from '../components/ui';
 import { colors } from '../config/theme';
+import { useLanguage } from '../stores/LanguageContext';
 
 export default function Index() {
   const { isAuthenticated, isLoading, memberships, user } = useAuth();
+  const { t } = useLanguage();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export default function Index() {
   if (isLoading || !ready) {
     return (
       <View style={styles.container}>
-        <LoadingSpinner message="Loading..." />
+        <LoadingSpinner message={t('common.loading')} />
       </View>
     );
   }

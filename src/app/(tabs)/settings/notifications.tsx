@@ -54,17 +54,17 @@ export default function NotificationsScreen() {
           >
             <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>Notifications</Text>
+          <Text style={[styles.title, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('notifications.title')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         {/* General Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>General</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('notifications.general')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <ToggleItem
-              title="Push Notifications"
-              description="Receive notifications on your device"
+              title={t('notifications.pushNotifications')}
+              description={t('notifications.pushDesc')}
               value={pushEnabled}
               onValueChange={setPushEnabled}
               isDark={isDark}
@@ -72,8 +72,8 @@ export default function NotificationsScreen() {
             />
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <ToggleItem
-              title="Email Notifications"
-              description="Receive updates via email"
+              title={t('notifications.emailNotifications')}
+              description={t('notifications.emailDesc')}
               value={emailEnabled}
               onValueChange={setEmailEnabled}
               isDark={isDark}
@@ -84,11 +84,11 @@ export default function NotificationsScreen() {
 
         {/* Activity Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>Activity</Text>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('notifications.activity')}</Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <ToggleItem
-              title="Task Reminders"
-              description="Get reminded about upcoming tasks"
+              title={t('notifications.taskReminders')}
+              description={t('notifications.taskRemindersDesc')}
               value={taskReminders}
               onValueChange={setTaskReminders}
               isDark={isDark}
@@ -96,8 +96,8 @@ export default function NotificationsScreen() {
             />
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <ToggleItem
-              title="Stage Updates"
-              description="When a project stage changes status"
+              title={t('notifications.stageUpdates')}
+              description={t('notifications.stageUpdatesDesc')}
               value={stageUpdates}
               onValueChange={setStageUpdates}
               isDark={isDark}
@@ -105,8 +105,8 @@ export default function NotificationsScreen() {
             />
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <ToggleItem
-              title="Budget Alerts"
-              description="When spending approaches budget limits"
+              title={t('notifications.budgetAlerts')}
+              description={t('notifications.budgetAlertsDesc')}
               value={budgetAlerts}
               onValueChange={setBudgetAlerts}
               isDark={isDark}
@@ -114,8 +114,8 @@ export default function NotificationsScreen() {
             />
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <ToggleItem
-              title="Team Updates"
-              description="When team members make changes"
+              title={t('notifications.teamUpdates')}
+              description={t('notifications.teamUpdatesDesc')}
               value={teamUpdates}
               onValueChange={setTeamUpdates}
               isDark={isDark}
