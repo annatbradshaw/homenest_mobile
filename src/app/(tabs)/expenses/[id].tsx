@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,18 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   ChevronLeft,
+  ChevronRight,
   Calendar,
   DollarSign,
   Layers,
@@ -20,20 +27,29 @@ import {
   Trash2,
   Clock,
   CheckCircle2,
+  X,
+  Check,
+  Camera,
+  ImageIcon,
 } from 'lucide-react-native';
 import { useExpenses, useUpdateExpense, useDeleteExpense } from '../../../hooks/useExpenses';
 import { useStages } from '../../../hooks/useStages';
 import { useSuppliers } from '../../../hooks/useSuppliers';
 import { useProject } from '../../../stores/ProjectContext';
+import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { ExpenseStatus } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
+import { pickReceiptImage, uploadReceiptImage } from '../../../utils/receiptUpload';
+
+type EditView = 'form' | 'stage' | 'supplier';
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentProject } = useProject();
+  const { user } = useAuth();
   const { isDark, colors } = useTheme();
   const { t, formatDate } = useLanguage();
   const { formatAmount } = useCurrency();
@@ -42,6 +58,24 @@ export default function ExpenseDetailScreen() {
   const STATUS_OPTIONS: { label: string; value: ExpenseStatus; icon: any }[] = [
     { label: t('expenses.pending'), value: 'pending', icon: Clock },
     { label: t('expenses.paid'), value: 'paid', icon: CheckCircle2 },
+  ];
+
+  const EXPENSE_CATEGORIES = [
+    { label: t('expenses.categories.labor'), value: 'labor' },
+    { label: t('expenses.categories.materials'), value: 'materials' },
+    { label: t('expenses.categories.equipment'), value: 'equipment' },
+    { label: t('expenses.categories.permits'), value: 'permits' },
+    { label: t('expenses.categories.utilities'), value: 'utilities' },
+    { label: t('expenses.categories.transportation'), value: 'transportation' },
+    { label: t('expenses.categories.other'), value: 'other' },
+  ];
+
+  const PAYMENT_METHODS = [
+    { label: t('expenses.paymentMethods.cash'), value: 'cash' },
+    { label: t('expenses.paymentMethods.check'), value: 'check' },
+    { label: t('expenses.paymentMethods.creditCard'), value: 'credit-card' },
+    { label: t('expenses.paymentMethods.bankTransfer'), value: 'bank-transfer' },
+    { label: t('expenses.paymentMethods.invoice'), value: 'invoice' },
   ];
 
   const CATEGORY_LABELS: Record<string, string> = {
@@ -54,6 +88,14 @@ export default function ExpenseDetailScreen() {
     other: t('expenses.categories.other'),
   };
 
+  const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    cash: t('expenses.paymentMethods.cash'),
+    check: t('expenses.paymentMethods.check'),
+    'credit-card': t('expenses.paymentMethods.creditCard'),
+    'bank-transfer': t('expenses.paymentMethods.bankTransfer'),
+    invoice: t('expenses.paymentMethods.invoice'),
+  };
+
   const { data: expenses } = useExpenses(currentProject?.id);
   const { data: stages } = useStages(currentProject?.id);
   const { data: suppliers } = useSuppliers(currentProject?.id);
@@ -62,8 +104,51 @@ export default function ExpenseDetailScreen() {
 
   const expense = expenses?.find(e => e.id === id);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(expense?.description || '');
-  const [editedAmount, setEditedAmount] = useState(expense?.amount?.toString() || '');
+  const [editView, setEditView] = useState<EditView>('form');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [receiptImageUri, setReceiptImageUri] = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+
+  // Form data state
+  const [formData, setFormData] = useState({
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    category: '',
+    status: 'pending' as ExpenseStatus,
+    stage_id: '',
+    supplier_id: '',
+    payment_method: '',
+    receipt_url: '',
+  });
+
+  // Update form data when expense loads
+  useEffect(() => {
+    if (expense) {
+      setFormData({
+        amount: expense.amount?.toString() || '',
+        date: expense.date || new Date().toISOString().split('T')[0],
+        description: expense.description || '',
+        category: expense.category || '',
+        status: expense.status || 'pending',
+        stage_id: expense.stage_id || '',
+        supplier_id: expense.supplier_id || '',
+        payment_method: expense.payment_method || '',
+        receipt_url: expense.receipt_url || '',
+      });
+    }
+  }, [expense]);
+
+  // Get selected names
+  const selectedStageName = useMemo(() => {
+    if (!formData.stage_id || !stages) return null;
+    return stages.find(s => s.id === formData.stage_id)?.name || null;
+  }, [formData.stage_id, stages]);
+
+  const selectedSupplierName = useMemo(() => {
+    if (!formData.supplier_id || !suppliers) return null;
+    return suppliers.find(s => s.id === formData.supplier_id)?.name || null;
+  }, [formData.supplier_id, suppliers]);
 
   if (!expense) {
     return (
@@ -85,35 +170,86 @@ export default function ExpenseDetailScreen() {
   const linkedStage = stages?.find(s => s.id === expense.stage_id);
   const linkedSupplier = suppliers?.find(s => s.id === expense.supplier_id);
 
-  const handleStatusChange = async (newStatus: ExpenseStatus) => {
-    try {
-      await updateExpense.mutateAsync({
-        id: expense.id,
-        updates: { status: newStatus },
-      });
-    } catch (error) {
-      Alert.alert(t('common.error'), t('errors.failedUpdateStatus'));
+  const handlePickReceipt = async (useCamera: boolean) => {
+    const uri = await pickReceiptImage(useCamera);
+    if (uri) {
+      setReceiptImageUri(uri);
     }
   };
 
+  const handleRemoveReceipt = () => {
+    setReceiptImageUri(null);
+    setFormData(prev => ({ ...prev, receipt_url: '' }));
+  };
+
   const handleSave = async () => {
-    const amount = parseFloat(editedAmount);
+    const amount = parseFloat(formData.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert(t('common.error'), t('errors.invalidAmount'));
       return;
     }
     try {
+      let receiptUrl = formData.receipt_url;
+
+      // Upload new receipt if selected
+      if (receiptImageUri && user) {
+        setUploadingReceipt(true);
+        const tenantId = user.user_metadata?.tenant_id || user.id;
+        const result = await uploadReceiptImage(
+          receiptImageUri,
+          tenantId,
+          currentProject?.id || ''
+        );
+        setUploadingReceipt(false);
+
+        if (!result.success) {
+          Alert.alert(t('common.error'), result.error || t('errors.failedUploadReceipt'));
+          return;
+        }
+        receiptUrl = result.url;
+      }
+
       await updateExpense.mutateAsync({
         id: expense.id,
         updates: {
-          description: editedDescription.trim() || null,
           amount,
+          date: formData.date,
+          description: formData.description.trim() || null,
+          category: formData.category || null,
+          status: formData.status,
+          stage_id: formData.stage_id || null,
+          supplier_id: formData.supplier_id || null,
+          payment_method: formData.payment_method || null,
+          receipt_url: receiptUrl || null,
         },
       });
+      setReceiptImageUri(null);
       setIsEditing(false);
+      setEditView('form');
     } catch (error) {
+      setUploadingReceipt(false);
       Alert.alert(t('common.error'), t('errors.failedUpdateExpense'));
     }
+  };
+
+  const handleCancel = () => {
+    // Reset form to expense values
+    if (expense) {
+      setFormData({
+        amount: expense.amount?.toString() || '',
+        date: expense.date || new Date().toISOString().split('T')[0],
+        description: expense.description || '',
+        category: expense.category || '',
+        status: expense.status || 'pending',
+        stage_id: expense.stage_id || '',
+        supplier_id: expense.supplier_id || '',
+        payment_method: expense.payment_method || '',
+        receipt_url: expense.receipt_url || '',
+      });
+    }
+    setReceiptImageUri(null);
+    setIsEditing(false);
+    setEditView('form');
   };
 
   const handleDelete = () => {
@@ -138,6 +274,16 @@ export default function ExpenseDetailScreen() {
     );
   };
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        date: selectedDate.toISOString().split('T')[0]
+      }));
+    }
+  };
+
   const getStatusStyle = (status: ExpenseStatus) => {
     if (isDark) {
       switch (status) {
@@ -157,57 +303,398 @@ export default function ExpenseDetailScreen() {
 
   const statusStyle = getStatusStyle(expense.status);
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.neutral[900] : colors.neutral[50] }]} edges={['top']}>
+  // Render stage selection view
+  const renderStageSelection = () => (
+    <View style={styles.selectionContainer}>
+      <View style={[styles.selectionHeader, { backgroundColor: isDark ? colors.accent[900] : colors.accent[50], borderBottomColor: isDark ? colors.accent[800] : colors.accent[100] }]}>
+        <TouchableOpacity onPress={() => setEditView('form')} style={styles.selectionBackButton}>
+          <ChevronLeft size={24} color={isDark ? colors.accent[400] : colors.accent[600]} />
+        </TouchableOpacity>
+        <Text style={[styles.selectionTitle, { color: isDark ? colors.accent[400] : colors.accent[700] }]}>{t('forms.selectStage')}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <FlatList
+        data={[{ id: '', name: t('common.none') }, ...(stages || [])]}
+        keyExtractor={(item) => item.id || 'none'}
+        contentContainerStyle={styles.selectionList}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.selectionItem, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }]}
+            onPress={() => {
+              setFormData(prev => ({ ...prev, stage_id: item.id }));
+              setEditView('form');
+            }}
+          >
+            <Text style={[styles.selectionItemText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{item.name}</Text>
+            {formData.stage_id === item.id && (
+              <Check size={20} color={colors.primary[600]} />
+            )}
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+
+  // Render supplier selection view
+  const renderSupplierSelection = () => (
+    <View style={styles.selectionContainer}>
+      <View style={[styles.selectionHeader, { backgroundColor: isDark ? colors.success[900] : colors.success[50], borderBottomColor: isDark ? colors.success[800] : colors.success[100] }]}>
+        <TouchableOpacity onPress={() => setEditView('form')} style={styles.selectionBackButton}>
+          <ChevronLeft size={24} color={isDark ? colors.success[400] : colors.success[600]} />
+        </TouchableOpacity>
+        <Text style={[styles.selectionTitle, { color: isDark ? colors.success[400] : colors.success[700] }]}>{t('forms.selectSupplier')}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <FlatList
+        data={[{ id: '', name: t('common.none'), company: '' }, ...(suppliers || [])]}
+        keyExtractor={(item) => item.id || 'none'}
+        contentContainerStyle={styles.selectionList}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.selectionItem, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }]}
+            onPress={() => {
+              setFormData(prev => ({ ...prev, supplier_id: item.id }));
+              setEditView('form');
+            }}
+          >
+            <View style={styles.selectionItemContent}>
+              <Text style={[styles.selectionItemText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{item.name}</Text>
+              {item.company && (
+                <Text style={[styles.selectionItemSubtext, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{item.company}</Text>
+              )}
+            </View>
+            {formData.supplier_id === item.id && (
+              <Check size={20} color={colors.primary[600]} />
+            )}
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+
+  // Render edit form
+  const renderEditForm = () => (
+    <>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
+          <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('forms.editExpense')}</Text>
+        <TouchableOpacity onPress={handleSave} disabled={updateExpense.isPending || uploadingReceipt}>
+          <Text style={[styles.saveButton, (updateExpense.isPending || uploadingReceipt) && { opacity: 0.5 }]}>
+            {updateExpense.isPending || uploadingReceipt ? t('common.saving') : t('common.save')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Amount */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.amountRequired')}</Text>
+            <TextInput
+              style={[styles.textInput, {
+                backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+                color: isDark ? colors.neutral[50] : colors.neutral[900]
+              }]}
+              placeholder="0.00"
+              placeholderTextColor={colors.neutral[400]}
+              value={formData.amount}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, amount: text }))}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          {/* Date */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.date')}</Text>
+            <TouchableOpacity
+              style={[styles.selectorButton, {
+                backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
+              }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Calendar size={18} color={colors.neutral[400]} />
+              <Text style={[styles.selectorText, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
+                {formatDate(formData.date, 'long')}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date(formData.date)}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
+
+          {/* Description */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.descriptionLabel')}</Text>
+            <TextInput
+              style={[styles.textInput, {
+                backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+                color: isDark ? colors.neutral[50] : colors.neutral[900]
+              }]}
+              placeholder={t('forms.descriptionPlaceholder')}
+              placeholderTextColor={colors.neutral[400]}
+              value={formData.description}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+            />
+          </View>
+
+          {/* Category */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.category')}</Text>
+            <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+              {EXPENSE_CATEGORIES.slice(0, 4).map((cat) => (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={[
+                    styles.segmentItem,
+                    formData.category === cat.value && [styles.segmentItemActive, { backgroundColor: isDark ? colors.neutral[700] : '#fff' }],
+                  ]}
+                  onPress={() => setFormData(prev => ({
+                    ...prev,
+                    category: prev.category === cat.value ? '' : cat.value
+                  }))}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      { color: isDark ? colors.neutral[400] : colors.neutral[500] },
+                      formData.category === cat.value && [styles.segmentTextActive, { color: isDark ? colors.neutral[50] : colors.neutral[900] }],
+                    ]}
+                  >
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={[styles.segmentedControl, { marginTop: 8, backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+              {EXPENSE_CATEGORIES.slice(4).map((cat) => (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={[
+                    styles.segmentItem,
+                    formData.category === cat.value && [styles.segmentItemActive, { backgroundColor: isDark ? colors.neutral[700] : '#fff' }],
+                  ]}
+                  onPress={() => setFormData(prev => ({
+                    ...prev,
+                    category: prev.category === cat.value ? '' : cat.value
+                  }))}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      { color: isDark ? colors.neutral[400] : colors.neutral[500] },
+                      formData.category === cat.value && [styles.segmentTextActive, { color: isDark ? colors.neutral[50] : colors.neutral[900] }],
+                    ]}
+                  >
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Status */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.status')}</Text>
+            <View style={styles.statusOptions}>
+              {STATUS_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isActive = formData.status === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.statusOption,
+                      { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] },
+                      isActive && {
+                        backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
+                        borderColor: isDark ? colors.primary[600] : colors.primary[300]
+                      }
+                    ]}
+                    onPress={() => setFormData(prev => ({ ...prev, status: option.value }))}
+                  >
+                    <Icon
+                      size={18}
+                      color={isActive ? (isDark ? colors.primary[400] : colors.primary[600]) : colors.neutral[400]}
+                    />
+                    <Text style={[
+                      styles.statusOptionText,
+                      { color: isDark ? colors.neutral[400] : colors.neutral[600] },
+                      isActive && { color: isDark ? colors.primary[400] : colors.primary[700] }
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Stage */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.linkToStage')}</Text>
+            <TouchableOpacity
+              style={[styles.selectorButton, {
+                backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
+              }]}
+              onPress={() => setEditView('stage')}
+            >
+              <Layers size={18} color={colors.neutral[400]} />
+              <Text style={[
+                selectedStageName ? styles.selectorText : styles.selectorPlaceholder,
+                selectedStageName && { color: isDark ? colors.neutral[50] : colors.neutral[900] }
+              ]}>
+                {selectedStageName || t('forms.selectStage')}
+              </Text>
+              <ChevronRight size={18} color={colors.neutral[400]} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Supplier */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.supplier')}</Text>
+            <TouchableOpacity
+              style={[styles.selectorButton, {
+                backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
+              }]}
+              onPress={() => setEditView('supplier')}
+            >
+              <User size={18} color={colors.neutral[400]} />
+              <Text style={[
+                selectedSupplierName ? styles.selectorText : styles.selectorPlaceholder,
+                selectedSupplierName && { color: isDark ? colors.neutral[50] : colors.neutral[900] }
+              ]}>
+                {selectedSupplierName || t('forms.selectSupplier')}
+              </Text>
+              <ChevronRight size={18} color={colors.neutral[400]} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Payment Method */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.paymentMethod')}</Text>
+            <View style={[styles.segmentedControl, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+              {PAYMENT_METHODS.map((method) => (
+                <TouchableOpacity
+                  key={method.value}
+                  style={[
+                    styles.segmentItem,
+                    formData.payment_method === method.value && [styles.segmentItemActive, { backgroundColor: isDark ? colors.neutral[700] : '#fff' }],
+                  ]}
+                  onPress={() => setFormData(prev => ({
+                    ...prev,
+                    payment_method: prev.payment_method === method.value ? '' : method.value
+                  }))}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      { color: isDark ? colors.neutral[400] : colors.neutral[500] },
+                      formData.payment_method === method.value && [styles.segmentTextActive, { color: isDark ? colors.neutral[50] : colors.neutral[900] }],
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {method.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Receipt Upload */}
+          <View style={styles.section}>
+            <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
+            {(receiptImageUri || formData.receipt_url) ? (
+              <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+                <Image source={{ uri: receiptImageUri || formData.receipt_url }} style={styles.receiptPreview} />
+                <TouchableOpacity
+                  style={styles.removeReceiptButton}
+                  onPress={handleRemoveReceipt}
+                >
+                  <Trash2 size={16} color={colors.danger[600]} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.receiptButtons}>
+                <TouchableOpacity
+                  style={[styles.receiptButton, {
+                    backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                    borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
+                  }]}
+                  onPress={() => handlePickReceipt(true)}
+                >
+                  <Camera size={20} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
+                  <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>{t('expenses.takePhoto')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.receiptButton, {
+                    backgroundColor: isDark ? colors.neutral[800] : colors.neutral[50],
+                    borderColor: isDark ? colors.neutral[700] : colors.neutral[200]
+                  }]}
+                  onPress={() => handlePickReceipt(false)}
+                >
+                  <ImageIcon size={20} color={isDark ? colors.neutral[400] : colors.neutral[600]} />
+                  <Text style={[styles.receiptButtonText, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>{t('expenses.fromLibrary')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          {uploadingReceipt && (
+            <View style={styles.uploadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary[600]} />
+              <Text style={[styles.uploadingText, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.uploadingReceipt')}</Text>
+            </View>
+          )}
+
+          {/* Delete Button */}
+          <View style={styles.section}>
+            <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? `${colors.danger[500]}15` : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
+              <Trash2 size={18} color={isDark ? colors.danger[400] : colors.danger[600]} />
+              <Text style={[styles.deleteButtonText, { color: isDark ? colors.danger[400] : colors.danger[600] }]}>{t('expenses.deleteExpense')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
+  );
+
+  // Render view mode
+  const renderViewMode = () => (
+    <>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ChevronLeft size={24} color={isDark ? colors.neutral[50] : colors.neutral[900]} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{t('expenses.expenseDetails')}</Text>
-        {isEditing ? (
-          <TouchableOpacity onPress={handleSave}>
-            <Text style={styles.saveButton}>{t('common.save')}</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => setIsEditing(true)}>
-            <Text style={styles.editButton}>{t('common.edit')}</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={() => setIsEditing(true)}>
+          <Text style={styles.editButtonText}>{t('common.edit')}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Amount & Description */}
         <View style={styles.section}>
-          {isEditing ? (
-            <>
-              <View style={styles.amountInputRow}>
-                <Text style={[styles.currencySymbol, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}>$</Text>
-                <TextInput
-                  style={[styles.amountInput, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}
-                  value={editedAmount}
-                  onChangeText={setEditedAmount}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.neutral[400]}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-              <TextInput
-                style={[styles.descriptionInput, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}
-                value={editedDescription}
-                onChangeText={setEditedDescription}
-                placeholder={t('expenses.addDescription')}
-                placeholderTextColor={colors.neutral[400]}
-                multiline
-              />
-            </>
-          ) : (
-            <>
-              <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(expense.amount)}</Text>
-              <Text style={[styles.expenseDescription, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
-                {expense.description || expense.category || t('expenses.expense')}
-              </Text>
-            </>
-          )}
+          <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(expense.amount)}</Text>
+          <Text style={[styles.expenseDescription, { color: isDark ? colors.neutral[400] : colors.neutral[600] }]}>
+            {expense.description || expense.category || t('expenses.expense')}
+          </Text>
           <View style={styles.badges}>
             <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
               <Text style={[styles.statusText, { color: statusStyle.text }]}>
@@ -221,43 +708,6 @@ export default function ExpenseDetailScreen() {
                 </Text>
               </View>
             )}
-          </View>
-        </View>
-
-        {/* Status Selector */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.status')}</Text>
-          <View style={styles.statusOptions}>
-            {STATUS_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isActive = expense.status === option.value;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.statusOption,
-                    { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] },
-                    isActive && {
-                      backgroundColor: isDark ? `${colors.primary[500]}20` : colors.primary[50],
-                      borderColor: isDark ? colors.primary[600] : colors.primary[300]
-                    }
-                  ]}
-                  onPress={() => handleStatusChange(option.value)}
-                >
-                  <Icon
-                    size={18}
-                    color={isActive ? (isDark ? colors.primary[400] : colors.primary[600]) : colors.neutral[400]}
-                  />
-                  <Text style={[
-                    styles.statusOptionText,
-                    { color: isDark ? colors.neutral[400] : colors.neutral[600] },
-                    isActive && { color: isDark ? colors.primary[400] : colors.primary[700] }
-                  ]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
           </View>
         </View>
 
@@ -282,7 +732,7 @@ export default function ExpenseDetailScreen() {
               <View style={styles.cardRow}>
                 <CreditCard size={18} color={colors.neutral[400]} />
                 <Text style={[styles.cardValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
-                  {expense.payment_method.replace('-', ' ')}
+                  {PAYMENT_METHOD_LABELS[expense.payment_method] || expense.payment_method}
                 </Text>
               </View>
             </View>
@@ -323,6 +773,16 @@ export default function ExpenseDetailScreen() {
           </View>
         )}
 
+        {/* Receipt */}
+        {expense.receipt_url && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
+            <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+              <Image source={{ uri: expense.receipt_url }} style={styles.receiptPreview} />
+            </View>
+          </View>
+        )}
+
         {/* Delete Button */}
         <View style={styles.section}>
           <TouchableOpacity style={[styles.deleteButton, { backgroundColor: isDark ? `${colors.danger[500]}15` : colors.danger[50], borderColor: isDark ? colors.danger[800] : colors.danger[200] }]} onPress={handleDelete}>
@@ -333,6 +793,18 @@ export default function ExpenseDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+    </>
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.neutral[900] : colors.neutral[50] }]} edges={['top']}>
+      {isEditing ? (
+        editView === 'form' ? renderEditForm() :
+        editView === 'stage' ? renderStageSelection() :
+        renderSupplierSelection()
+      ) : (
+        renderViewMode()
+      )}
     </SafeAreaView>
   );
 }
@@ -365,7 +837,7 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  editButton: {
+  editButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.primary[600],
@@ -399,6 +871,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: themeColors.neutral[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
   expenseAmount: {
     fontSize: 36,
     fontWeight: '700',
@@ -410,30 +890,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: themeColors.neutral[600],
     marginBottom: 12,
-  },
-  amountInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  currencySymbol: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: themeColors.neutral[400],
-    marginRight: 4,
-  },
-  amountInput: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: themeColors.neutral[900],
-    flex: 1,
-    padding: 0,
-  },
-  descriptionInput: {
-    fontSize: 18,
-    color: themeColors.neutral[600],
-    marginBottom: 12,
-    padding: 0,
   },
   badges: {
     flexDirection: 'row',
@@ -460,6 +916,16 @@ const styles = StyleSheet.create({
     color: themeColors.neutral[600],
     textTransform: 'capitalize',
   },
+  textInput: {
+    fontSize: 16,
+    color: themeColors.neutral[900],
+    backgroundColor: themeColors.neutral[50],
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: themeColors.neutral[200],
+  },
   statusOptions: {
     flexDirection: 'row',
     gap: 12,
@@ -476,17 +942,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: themeColors.neutral[200],
   },
-  statusOptionActive: {
-    backgroundColor: themeColors.primary[50],
-    borderColor: themeColors.primary[300],
-  },
   statusOptionText: {
     fontSize: 15,
     fontWeight: '500',
     color: themeColors.neutral[600],
   },
-  statusOptionTextActive: {
-    color: themeColors.primary[700],
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: themeColors.neutral[100],
+    borderRadius: 12,
+    padding: 4,
+  },
+  segmentItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  segmentItemActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: themeColors.neutral[500],
+  },
+  segmentTextActive: {
+    color: themeColors.neutral[900],
+  },
+  selectorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.neutral[50],
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: themeColors.neutral[200],
+    gap: 12,
+  },
+  selectorText: {
+    flex: 1,
+    fontSize: 16,
+    color: themeColors.neutral[900],
+  },
+  selectorPlaceholder: {
+    flex: 1,
+    fontSize: 16,
+    color: themeColors.neutral[400],
   },
   card: {
     backgroundColor: '#fff',
@@ -528,5 +1037,116 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.danger[600],
+  },
+  // Selection View Styles
+  selectionContainer: {
+    flex: 1,
+  },
+  selectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.neutral[100],
+  },
+  selectionBackButton: {
+    width: 40,
+  },
+  selectionTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '600',
+    color: themeColors.neutral[900],
+    textAlign: 'center',
+  },
+  selectionList: {
+    paddingVertical: 8,
+  },
+  selectionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.neutral[100],
+  },
+  selectionItemContent: {
+    flex: 1,
+  },
+  selectionItemText: {
+    fontSize: 16,
+    color: themeColors.neutral[900],
+  },
+  selectionItemSubtext: {
+    fontSize: 13,
+    color: themeColors.neutral[500],
+    marginTop: 2,
+  },
+  // Receipt upload styles
+  receiptButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  receiptButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: themeColors.neutral[50],
+    borderRadius: 12,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: themeColors.neutral[200],
+    borderStyle: 'dashed',
+  },
+  receiptButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: themeColors.neutral[600],
+  },
+  receiptPreviewContainer: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: themeColors.neutral[100],
+  },
+  receiptPreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    resizeMode: 'cover',
+  },
+  removeReceiptButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  uploadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  uploadingText: {
+    fontSize: 14,
+    color: themeColors.neutral[500],
   },
 });

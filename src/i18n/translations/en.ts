@@ -709,5 +709,8 @@ export default {
     budgetUsed: '% of budget used',
     remaining: 'remaining',
     selectDate: 'Select date',
+    editStage: 'Edit Stage',
+    editTask: 'Edit Task',
+    editExpense: 'Edit Expense',
   },
 };

@@ -83,6 +83,8 @@ export default function AddSupplierScreen() {
         payment_terms: formData.paymentTerms.trim() || undefined,
         rating: formData.rating ? parseInt(formData.rating) : undefined,
         stage_ids: formData.stageIds.length > 0 ? formData.stageIds : undefined,
+        notes: formData.notes.trim() || undefined,
+        is_active: formData.isActive,
       });
       router.back();
     } catch (error) {

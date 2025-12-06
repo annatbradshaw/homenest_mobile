@@ -70,7 +70,7 @@ export function useCreateSupplier() {
           ...supplier,
           tenant_id: currentTenant.id,
           created_by: user?.id,
-          is_active: true,
+          is_active: supplier.is_active ?? true,
         })
         .select()
         .single();

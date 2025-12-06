@@ -171,6 +171,7 @@ export interface Supplier extends Auditable {
   rating?: number;
   is_active: boolean;
   stage_ids?: UUID[];
+  notes?: string;
   // Relations
   project?: Project;
 }
@@ -255,7 +256,11 @@ export interface CreateStageRequest {
   dependencies?: UUID[];
 }
 
-export interface UpdateStageRequest extends Partial<Omit<CreateStageRequest, 'project_id'>> {}
+export interface UpdateStageRequest extends Partial<Omit<CreateStageRequest, 'project_id'>> {
+  actual_start_date?: string;
+  actual_end_date?: string;
+  actual_cost?: number;
+}
 
 export interface CreateTodoRequest {
   project_id: UUID;
@@ -281,6 +286,7 @@ export interface CreateExpenseRequest {
   description?: string;
   status?: ExpenseStatus;
   payment_method?: string;
+  receipt_url?: string;
 }
 
 export interface UpdateExpenseRequest extends Partial<Omit<CreateExpenseRequest, 'project_id'>> {}
@@ -297,6 +303,8 @@ export interface CreateSupplierRequest {
   payment_terms?: string;
   rating?: number;
   stage_ids?: UUID[];
+  notes?: string;
+  is_active?: boolean;
 }
 
 export interface UpdateSupplierRequest extends Partial<Omit<CreateSupplierRequest, 'project_id'>> {}

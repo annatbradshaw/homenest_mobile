@@ -699,5 +699,8 @@ export default {
     budgetUsed: '% budżetu wykorzystane',
     remaining: 'pozostało',
     selectDate: 'Wybierz datę',
+    editStage: 'Edytuj Etap',
+    editTask: 'Edytuj Zadanie',
+    editExpense: 'Edytuj Wydatek',
   },
 };
