@@ -207,8 +207,14 @@ export default function ExpensesScreen() {
     const spent = expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
     const remaining = budget - spent;
     const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0;
-    return { budget, spent, remaining, percentage };
-  }, [currentProject, expenses]);
+
+    // New calculations
+    const estimated = stages?.reduce((sum, s) => sum + (s.estimated_cost || 0), 0) || 0;
+    const committed = expenses?.filter(e => e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+    const paid = expenses?.filter(e => e.status === 'paid').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+
+    return { budget, spent, remaining, percentage, estimated, committed, paid };
+  }, [currentProject, expenses, stages]);
 
   // Get selected names
   const selectedStageName = useMemo(() => {
@@ -614,16 +620,8 @@ export default function ExpensesScreen() {
       >
         {/* Budget Overview */}
         <View style={styles.budgetCard}>
-          <View style={styles.budgetRow}>
-            <View style={styles.budgetItem}>
-              <Text style={styles.budgetLabel}>{t('expenses.totalBudget')}</Text>
-              <Text style={styles.budgetValue}>{formatAmount(budgetStats.budget)}</Text>
-            </View>
-            <View style={styles.budgetItem}>
-              <Text style={styles.budgetLabel}>{t('expenses.spent')}</Text>
-              <Text style={styles.budgetValue}>{formatAmount(budgetStats.spent)}</Text>
-            </View>
-          </View>
+          <Text style={styles.budgetLabel}>{t('expenses.totalBudget')}</Text>
+          <Text style={styles.budgetValueLarge}>{formatAmount(budgetStats.budget)}</Text>
           <View style={styles.progressBar}>
             <View
               style={[
@@ -636,6 +634,24 @@ export default function ExpensesScreen() {
             />
           </View>
           <Text style={styles.percentageText}>{budgetStats.percentage}{t('expenses.budgetUsed')}</Text>
+        </View>
+
+        {/* Budget Breakdown */}
+        <View style={[styles.breakdownRow, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+          <View style={styles.breakdownItem}>
+            <Text style={[styles.breakdownValue, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(budgetStats.estimated)}</Text>
+            <Text style={[styles.breakdownLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.estimated')}</Text>
+          </View>
+          <View style={[styles.breakdownDivider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[200] }]} />
+          <View style={styles.breakdownItem}>
+            <Text style={[styles.breakdownValue, { color: colors.accent[600] }]}>{formatAmount(budgetStats.committed)}</Text>
+            <Text style={[styles.breakdownLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.committed')}</Text>
+          </View>
+          <View style={[styles.breakdownDivider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[200] }]} />
+          <View style={styles.breakdownItem}>
+            <Text style={[styles.breakdownValue, { color: colors.success[600] }]}>{formatAmount(budgetStats.paid)}</Text>
+            <Text style={[styles.breakdownLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.paidAmount')}</Text>
+          </View>
         </View>
 
         {/* Filter Tabs */}
@@ -663,17 +679,17 @@ export default function ExpensesScreen() {
               <TouchableOpacity key={expense.id} style={[styles.expenseItem, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} onPress={() => router.push(`/(tabs)/expenses/${expense.id}`)}>
                 <View style={styles.expenseInfo}>
                   <Text style={[styles.expenseDescription, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]} numberOfLines={1}>
-                    {expense.description || expense.category || t('expenses.expense')}
+                    {expense.description || (expense.category ? t(`expenses.categories.${expense.category}` as any) : t('expenses.expense'))}
                   </Text>
                   <Text style={[styles.expenseDate, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
                     {formatDate(expense.date, 'short')}
-                    {expense.category && ` · ${expense.category}`}
+                    {expense.category && ` · ${t(`expenses.categories.${expense.category}` as any)}`}
                   </Text>
                 </View>
                 <View style={styles.expenseRight}>
                   <Text style={[styles.expenseAmount, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(expense.amount)}</Text>
                   <Text style={[styles.expenseStatus, expense.status === 'paid' && styles.statusPaid]}>
-                    {expense.status}
+                    {t(`expenses.${expense.status}` as any)}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -765,24 +781,46 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.primary[600],
     borderRadius: 16,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 12,
   },
-  budgetRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  budgetItem: {},
   budgetLabel: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.7)',
     marginBottom: 4,
   },
-  budgetValue: {
-    fontSize: 22,
+  budgetValueLarge: {
+    fontSize: 32,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.5,
+    marginBottom: 16,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: themeColors.neutral[200],
+    paddingVertical: 16,
+    marginBottom: 24,
+  },
+  breakdownItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  breakdownValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.neutral[900],
+    marginBottom: 4,
+  },
+  breakdownLabel: {
+    fontSize: 12,
+    color: themeColors.neutral[500],
+  },
+  breakdownDivider: {
+    width: 1,
+    backgroundColor: themeColors.neutral[200],
   },
   progressBar: {
     height: 6,
