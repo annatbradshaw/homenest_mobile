@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import { supabase, storage } from '../lib/supabase';
 
 const RECEIPT_BUCKET = 'receipts';
@@ -77,28 +77,20 @@ export async function uploadReceiptImage(
     // Compress the image first
     const compressedUri = await compressImage(imageUri);
 
-    // Read file as base64
-    const base64 = await FileSystem.readAsStringAsync(compressedUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
     // Generate unique filename
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const filename = `receipt_${timestamp}_${randomStr}.jpg`;
     const path = `${tenantId}/${projectId}/${filename}`;
 
-    // Convert base64 to ArrayBuffer
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    // Read file as bytes using new File API
+    const file = new File(compressedUri);
+    const bytes = file.bytes();
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from(RECEIPT_BUCKET)
-      .upload(path, bytes.buffer, {
+      .upload(path, bytes, {
         contentType: 'image/jpeg',
         upsert: false,
       });
@@ -108,10 +100,8 @@ export async function uploadReceiptImage(
       return { success: false, error: error.message };
     }
 
-    // Get public URL
-    const publicUrl = storage.getPublicUrl(RECEIPT_BUCKET, path);
-
-    return { success: true, url: publicUrl };
+    // Store the path - we'll generate signed URLs when displaying
+    return { success: true, url: path };
   } catch (error) {
     console.error('Receipt upload error:', error);
     return {
@@ -122,17 +112,37 @@ export async function uploadReceiptImage(
 }
 
 /**
+ * Get a signed URL for viewing a receipt (expires in 1 hour)
+ * Handles both old full URLs and new path-only storage
+ */
+export async function getReceiptSignedUrl(receiptUrl: string): Promise<string | null> {
+  try {
+    // Extract path if it's a full URL (legacy data)
+    let path = receiptUrl;
+    if (receiptUrl.includes(`${RECEIPT_BUCKET}/`)) {
+      const parts = receiptUrl.split(`${RECEIPT_BUCKET}/`);
+      path = parts[parts.length - 1];
+    }
+
+    const { url, error } = await storage.getSignedUrl(RECEIPT_BUCKET, path, 3600);
+    if (error) {
+      console.error('Error getting signed URL:', error);
+      return null;
+    }
+    return url || null;
+  } catch (error) {
+    console.error('Error getting signed URL:', error);
+    return null;
+  }
+}
+
+/**
  * Delete receipt image from Supabase Storage
  */
-export async function deleteReceiptImage(receiptUrl: string): Promise<boolean> {
+export async function deleteReceiptImage(path: string): Promise<boolean> {
   try {
-    // Extract path from URL
-    const urlParts = receiptUrl.split(`${RECEIPT_BUCKET}/`);
-    if (urlParts.length < 2) return false;
-
-    const path = urlParts[1];
+    // Path is stored directly now (not a full URL)
     const { error } = await supabase.storage.from(RECEIPT_BUCKET).remove([path]);
-
     return !error;
   } catch (error) {
     console.error('Delete receipt error:', error);

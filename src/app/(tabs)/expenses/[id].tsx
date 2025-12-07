@@ -42,7 +42,7 @@ import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { ExpenseStatus } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
-import { pickReceiptImage, uploadReceiptImage } from '../../../utils/receiptUpload';
+import { pickReceiptImage, uploadReceiptImage, getReceiptSignedUrl } from '../../../utils/receiptUpload';
 
 type EditView = 'form' | 'stage' | 'supplier';
 
@@ -108,6 +108,20 @@ export default function ExpenseDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [receiptImageUri, setReceiptImageUri] = useState<string | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [receiptSignedUrl, setReceiptSignedUrl] = useState<string | null>(null);
+
+  // Fetch signed URL for receipt when expense loads
+  useEffect(() => {
+    async function fetchSignedUrl() {
+      if (expense?.receipt_url) {
+        const signedUrl = await getReceiptSignedUrl(expense.receipt_url);
+        setReceiptSignedUrl(signedUrl);
+      } else {
+        setReceiptSignedUrl(null);
+      }
+    }
+    fetchSignedUrl();
+  }, [expense?.receipt_url]);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -610,9 +624,9 @@ export default function ExpenseDetailScreen() {
           {/* Receipt Upload */}
           <View style={styles.section}>
             <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
-            {(receiptImageUri || formData.receipt_url) ? (
+            {(receiptImageUri || receiptSignedUrl) ? (
               <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
-                <Image source={{ uri: receiptImageUri || formData.receipt_url }} style={styles.receiptPreview} />
+                <Image source={{ uri: receiptImageUri || receiptSignedUrl! }} style={styles.receiptPreview} />
                 <TouchableOpacity
                   style={styles.removeReceiptButton}
                   onPress={handleRemoveReceipt}
@@ -795,11 +809,11 @@ export default function ExpenseDetailScreen() {
         )}
 
         {/* Receipt */}
-        {expense.receipt_url && (
+        {receiptSignedUrl && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
             <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
-              <Image source={{ uri: expense.receipt_url }} style={styles.receiptPreview} />
+              <Image source={{ uri: receiptSignedUrl }} style={styles.receiptPreview} />
             </View>
           </View>
         )}
