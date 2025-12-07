@@ -50,6 +50,7 @@ export default function StageDetailScreen() {
   const { formatAmount } = useCurrency();
 
   const CATEGORY_OPTIONS: { label: string; value: StageCategory }[] = [
+    { label: t('stages.categories.siteWork'), value: 'site-work' },
     { label: t('stages.categories.structure'), value: 'structure' },
     { label: t('stages.categories.utilities'), value: 'utilities' },
     { label: t('stages.categories.interior'), value: 'interior' },
