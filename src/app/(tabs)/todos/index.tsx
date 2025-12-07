@@ -466,14 +466,6 @@ export default function TodosScreen() {
               </TouchableOpacity>
             )}
           </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.due_date ? new Date(formData.due_date) : new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-            />
-          )}
 
           {/* Assigned To */}
           <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.assignedTo')}</Text>
@@ -574,6 +566,35 @@ export default function TodosScreen() {
 
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        {Platform.OS === 'ios' && showDatePicker && (
+          <View style={[styles.datePickerContainer, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderTopColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+            <View style={[styles.datePickerHeader, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Text style={{ color: colors.neutral[500], fontSize: 16 }}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Text style={{ color: colors.primary[600], fontWeight: '600', fontSize: 16 }}>{t('common.done')}</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={formData.due_date ? new Date(formData.due_date) : new Date()}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              textColor={isDark ? '#fff' : '#000'}
+              style={{ height: 200 }}
+            />
+          </View>
+        )}
+        {Platform.OS === 'android' && showDatePicker && (
+          <DateTimePicker
+            value={formData.due_date ? new Date(formData.due_date) : new Date()}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
       </KeyboardAvoidingView>
     </>
   );
@@ -1269,5 +1290,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: themeColors.neutral[500],
     textAlign: 'center',
+  },
+  datePickerContainer: {
+    borderTopWidth: 1,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
 });

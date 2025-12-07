@@ -429,20 +429,33 @@ export default function StageDetailScreen() {
             <View style={{ height: 40 }} />
           </ScrollView>
 
-          {showDatePicker && (
+          {Platform.OS === 'ios' && showDatePicker && (
+            <View style={[styles.datePickerContainer, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderTopColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+              <View style={[styles.datePickerHeader, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={{ color: colors.neutral[500], fontSize: 16 }}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={{ color: colors.primary[600], fontWeight: '600', fontSize: 16 }}>{t('common.done')}</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={formData[activeDateField] ? new Date(formData[activeDateField]) : new Date()}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                textColor={isDark ? '#fff' : '#000'}
+                style={{ height: 200 }}
+              />
+            </View>
+          )}
+          {Platform.OS === 'android' && showDatePicker && (
             <DateTimePicker
               value={formData[activeDateField] ? new Date(formData[activeDateField]) : new Date()}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display="default"
               onChange={handleDateChange}
             />
-          )}
-          {Platform.OS === 'ios' && showDatePicker && (
-            <View style={[styles.datePickerDone, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderTopColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                <Text style={{ color: colors.primary[600], fontWeight: '600', fontSize: 16 }}>{t('common.done')}</Text>
-              </TouchableOpacity>
-            </View>
           )}
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -879,10 +892,14 @@ const styles = StyleSheet.create({
   datePlaceholder: {
     fontSize: 15,
   },
-  datePickerDone: {
+  datePickerContainer: {
+    borderTopWidth: 1,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    alignItems: 'flex-end',
-    borderTopWidth: 1,
+    borderBottomWidth: 1,
   },
 });

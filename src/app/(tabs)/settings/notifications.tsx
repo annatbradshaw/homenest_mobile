@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronLeft, ChevronRight, Bell, Mail, Clock, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, Bell, Mail, Clock, CheckCircle2, Calendar, DollarSign, AlertTriangle, CheckSquare } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { usePreferences } from '../../../stores/PreferencesContext';
 import { usePushNotifications } from '../../../hooks/usePushNotifications';
 import { colors as themeColors } from '../../../config/theme';
-import { ReminderTiming } from '../../../types/preferences';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '../../../types/preferences';
 
 interface ToggleItemProps {
   title: string;
@@ -51,38 +51,77 @@ function ToggleItem({ title, description, value, onValueChange, isDark, colors, 
   );
 }
 
-interface SelectItemProps {
+interface NumberInputItemProps {
   title: string;
-  value: string;
-  onPress: () => void;
+  description: string;
+  value: number;
+  onValueChange: (value: number) => void;
   isDark: boolean;
   colors: typeof themeColors;
-  icon?: React.ReactNode;
+  disabled?: boolean;
+  suffix?: string;
+  min?: number;
+  max?: number;
 }
 
-function SelectItem({ title, value, onPress, isDark, colors, icon }: SelectItemProps) {
+function NumberInputItem({ title, description, value, onValueChange, isDark, colors, disabled, suffix, min = 1, max = 100 }: NumberInputItemProps) {
+  const handleChange = (text: string) => {
+    const num = parseInt(text, 10);
+    if (!isNaN(num) && num >= min && num <= max) {
+      onValueChange(num);
+    } else if (text === '') {
+      onValueChange(min);
+    }
+  };
+
   return (
-    <TouchableOpacity style={styles.selectItem} onPress={onPress} activeOpacity={0.7}>
-      {icon && <View style={styles.iconContainer}>{icon}</View>}
-      <View style={styles.selectContent}>
-        <Text style={[styles.selectTitle, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>
+    <View style={[styles.toggleItem, disabled && styles.toggleItemDisabled]}>
+      <View style={styles.toggleContent}>
+        <Text style={[
+          styles.toggleTitle,
+          { color: isDark ? colors.neutral[50] : colors.neutral[900] },
+          disabled && { opacity: 0.5 }
+        ]}>
           {title}
         </Text>
+        <Text style={[
+          styles.toggleDescription,
+          { color: isDark ? colors.neutral[400] : colors.neutral[500] },
+          disabled && { opacity: 0.5 }
+        ]}>
+          {description}
+        </Text>
       </View>
-      <Text style={[styles.selectValue, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-        {value}
-      </Text>
-      <ChevronRight size={20} color={isDark ? colors.neutral[500] : colors.neutral[400]} />
-    </TouchableOpacity>
+      <View style={styles.numberInputContainer}>
+        <TextInput
+          style={[
+            styles.numberInput,
+            {
+              backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100],
+              color: isDark ? colors.neutral[50] : colors.neutral[900],
+              borderColor: isDark ? colors.neutral[600] : colors.neutral[200],
+            },
+            disabled && { opacity: 0.5 }
+          ]}
+          value={String(value)}
+          onChangeText={handleChange}
+          keyboardType="number-pad"
+          editable={!disabled}
+          selectTextOnFocus
+        />
+        {suffix && (
+          <Text style={[
+            styles.numberSuffix,
+            { color: isDark ? colors.neutral[400] : colors.neutral[500] },
+            disabled && { opacity: 0.5 }
+          ]}>
+            {suffix}
+          </Text>
+        )}
+      </View>
+    </View>
   );
 }
-
-const REMINDER_TIMING_OPTIONS: { value: ReminderTiming; labelKey: string }[] = [
-  { value: '1day', labelKey: 'notifications.timing1Day' },
-  { value: '3days', labelKey: 'notifications.timing3Days' },
-  { value: '1week', labelKey: 'notifications.timing1Week' },
-  { value: '2weeks', labelKey: 'notifications.timing2Weeks' },
-];
 
 export default function NotificationsScreen() {
   const { isDark, colors } = useTheme();
@@ -95,14 +134,7 @@ export default function NotificationsScreen() {
     error: pushError
   } = usePushNotifications();
 
-  const notificationPrefs = preferences.notifications ?? {
-    pushEnabled: true,
-    emailEnabled: true,
-    todoReminders: true,
-    stageUpdates: true,
-    budgetAlerts: true,
-    reminderTiming: '1day' as ReminderTiming,
-  };
+  const notificationPrefs = preferences.notifications ?? DEFAULT_NOTIFICATION_PREFERENCES;
 
   const handlePushToggle = async (value: boolean) => {
     if (value && permissionStatus !== 'granted') {
@@ -136,37 +168,58 @@ export default function NotificationsScreen() {
     });
   };
 
-  const handleStageUpdatesToggle = async (value: boolean) => {
+  const handleTodoReminderDaysChange = async (value: number) => {
     await updatePreferences({
-      notifications: { ...notificationPrefs, stageUpdates: value },
+      notifications: { ...notificationPrefs, todoReminderDaysBefore: value },
     });
   };
 
-  const handleBudgetAlertsToggle = async (value: boolean) => {
+  const handleOverdueRemindersToggle = async (value: boolean) => {
     await updatePreferences({
-      notifications: { ...notificationPrefs, budgetAlerts: value },
+      notifications: { ...notificationPrefs, overdueReminders: value },
     });
   };
 
-  const handleTimingPress = () => {
-    Alert.alert(
-      t('notifications.reminderTiming'),
-      t('notifications.reminderTimingDesc'),
-      REMINDER_TIMING_OPTIONS.map((option) => ({
-        text: t(option.labelKey),
-        onPress: async () => {
-          await updatePreferences({
-            notifications: { ...notificationPrefs, reminderTiming: option.value },
-          });
-        },
-        style: option.value === notificationPrefs.reminderTiming ? 'default' : 'default',
-      })).concat([{ text: t('common.cancel'), style: 'cancel', onPress: () => {} }])
-    );
+  const handleOverdueFrequencyChange = async (value: number) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, overdueReminderFrequency: value },
+    });
   };
 
-  const getTimingLabel = (timing: ReminderTiming) => {
-    const option = REMINDER_TIMING_OPTIONS.find((o) => o.value === timing);
-    return option ? t(option.labelKey) : timing;
+  const handleStageStartingToggle = async (value: boolean) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, stageStarting: value, stageUpdates: value || notificationPrefs.stageCompleted },
+    });
+  };
+
+  const handleStageStartingDaysChange = async (value: number) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, stageStartingDaysBefore: value },
+    });
+  };
+
+  const handleStageCompletedToggle = async (value: boolean) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, stageCompleted: value, stageUpdates: value || notificationPrefs.stageStarting },
+    });
+  };
+
+  const handleBudgetWarningToggle = async (value: boolean) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, budgetWarning: value, budgetAlerts: value || notificationPrefs.budgetExceeded },
+    });
+  };
+
+  const handleBudgetWarningThresholdChange = async (value: number) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, budgetWarningThreshold: value },
+    });
+  };
+
+  const handleBudgetExceededToggle = async (value: boolean) => {
+    await updatePreferences({
+      notifications: { ...notificationPrefs, budgetExceeded: value, budgetAlerts: value || notificationPrefs.budgetWarning },
+    });
   };
 
   const channelsDisabled = !notificationPrefs.pushEnabled && !notificationPrefs.emailEnabled;
@@ -244,63 +297,160 @@ export default function NotificationsScreen() {
           </View>
         </View>
 
-        {/* Types Section */}
+        {/* Task Reminders Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-            {t('notifications.types')}
+            {t('notifications.taskReminders')}
           </Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <ToggleItem
-              title={t('notifications.taskReminders')}
-              description={t('notifications.taskRemindersDesc')}
+              title={t('notifications.deadlineReminders')}
+              description={t('notifications.deadlineRemindersDesc')}
               value={notificationPrefs.todoReminders}
               onValueChange={handleTodoRemindersToggle}
               isDark={isDark}
               colors={colors}
               disabled={channelsDisabled}
+              icon={<Clock size={20} color={colors.primary[500]} />}
             />
+            {notificationPrefs.todoReminders && !channelsDisabled && (
+              <>
+                <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+                <NumberInputItem
+                  title={t('notifications.remindDaysBefore')}
+                  description={t('notifications.remindDaysBeforeDesc')}
+                  value={notificationPrefs.todoReminderDaysBefore ?? 1}
+                  onValueChange={handleTodoReminderDaysChange}
+                  isDark={isDark}
+                  colors={colors}
+                  suffix={t('notifications.days')}
+                  min={1}
+                  max={14}
+                />
+              </>
+            )}
             <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
             <ToggleItem
-              title={t('notifications.stageUpdates')}
-              description={t('notifications.stageUpdatesDesc')}
-              value={notificationPrefs.stageUpdates}
-              onValueChange={handleStageUpdatesToggle}
+              title={t('notifications.overdueReminders')}
+              description={t('notifications.overdueRemindersDesc')}
+              value={notificationPrefs.overdueReminders}
+              onValueChange={handleOverdueRemindersToggle}
               isDark={isDark}
               colors={colors}
               disabled={channelsDisabled}
+              icon={<AlertTriangle size={20} color={colors.danger[500]} />}
             />
-            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            {notificationPrefs.overdueReminders && !channelsDisabled && (
+              <>
+                <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+                <NumberInputItem
+                  title={t('notifications.reminderFrequency')}
+                  description={t('notifications.reminderFrequencyDesc')}
+                  value={notificationPrefs.overdueReminderFrequency ?? 1}
+                  onValueChange={handleOverdueFrequencyChange}
+                  isDark={isDark}
+                  colors={colors}
+                  suffix={t('notifications.days')}
+                  min={1}
+                  max={7}
+                />
+              </>
+            )}
+          </View>
+        </View>
+
+        {/* Stage Notifications Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
+            {t('notifications.stageNotifications')}
+          </Text>
+          <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
             <ToggleItem
-              title={t('notifications.budgetAlerts')}
-              description={t('notifications.budgetAlertsDesc')}
-              value={notificationPrefs.budgetAlerts}
-              onValueChange={handleBudgetAlertsToggle}
+              title={t('notifications.stageStartingSoon')}
+              description={t('notifications.stageStartingSoonDesc')}
+              value={notificationPrefs.stageStarting}
+              onValueChange={handleStageStartingToggle}
               isDark={isDark}
               colors={colors}
               disabled={channelsDisabled}
+              icon={<Calendar size={20} color={colors.primary[500]} />}
+            />
+            {notificationPrefs.stageStarting && !channelsDisabled && (
+              <>
+                <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+                <NumberInputItem
+                  title={t('notifications.notifyDaysBefore')}
+                  description={t('notifications.notifyDaysBeforeDesc')}
+                  value={notificationPrefs.stageStartingDaysBefore ?? 3}
+                  onValueChange={handleStageStartingDaysChange}
+                  isDark={isDark}
+                  colors={colors}
+                  suffix={t('notifications.days')}
+                  min={1}
+                  max={30}
+                />
+              </>
+            )}
+            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            <ToggleItem
+              title={t('notifications.stageCompleted')}
+              description={t('notifications.stageCompletedDesc')}
+              value={notificationPrefs.stageCompleted}
+              onValueChange={handleStageCompletedToggle}
+              isDark={isDark}
+              colors={colors}
+              disabled={channelsDisabled}
+              icon={<CheckSquare size={20} color={colors.success[500]} />}
             />
           </View>
         </View>
 
-        {/* Timing Section */}
+        {/* Budget Alerts Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-            {t('notifications.timing')}
+            {t('notifications.budgetNotifications')}
           </Text>
           <View style={[styles.card, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
-            <SelectItem
-              title={t('notifications.reminderTiming')}
-              value={getTimingLabel(notificationPrefs.reminderTiming)}
-              onPress={handleTimingPress}
+            <ToggleItem
+              title={t('notifications.budgetWarning')}
+              description={t('notifications.budgetWarningDesc')}
+              value={notificationPrefs.budgetWarning}
+              onValueChange={handleBudgetWarningToggle}
               isDark={isDark}
               colors={colors}
-              icon={<Clock size={20} color={colors.primary[500]} />}
+              disabled={channelsDisabled}
+              icon={<AlertTriangle size={20} color={colors.warning[500]} />}
+            />
+            {notificationPrefs.budgetWarning && !channelsDisabled && (
+              <>
+                <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+                <NumberInputItem
+                  title={t('notifications.warningThreshold')}
+                  description={t('notifications.warningThresholdDesc')}
+                  value={notificationPrefs.budgetWarningThreshold ?? 80}
+                  onValueChange={handleBudgetWarningThresholdChange}
+                  isDark={isDark}
+                  colors={colors}
+                  suffix="%"
+                  min={50}
+                  max={99}
+                />
+              </>
+            )}
+            <View style={[styles.divider, { backgroundColor: isDark ? colors.neutral[700] : colors.neutral[100] }]} />
+            <ToggleItem
+              title={t('notifications.budgetExceeded')}
+              description={t('notifications.budgetExceededDesc')}
+              value={notificationPrefs.budgetExceeded}
+              onValueChange={handleBudgetExceededToggle}
+              isDark={isDark}
+              colors={colors}
+              disabled={channelsDisabled}
+              icon={<DollarSign size={20} color={colors.danger[500]} />}
             />
           </View>
-          <Text style={[styles.sectionDescription, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>
-            {t('notifications.timingDescription')}
-          </Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -408,27 +558,27 @@ const styles = StyleSheet.create({
     color: themeColors.neutral[500],
     marginTop: 2,
   },
-  selectItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  selectContent: {
-    flex: 1,
-  },
-  selectTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: themeColors.neutral[900],
-  },
-  selectValue: {
-    fontSize: 15,
-    color: themeColors.neutral[500],
-  },
   divider: {
     height: 1,
     backgroundColor: themeColors.neutral[100],
     marginLeft: 64,
+  },
+  numberInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  numberInput: {
+    width: 56,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  numberSuffix: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

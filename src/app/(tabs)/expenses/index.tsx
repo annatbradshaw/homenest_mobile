@@ -357,14 +357,6 @@ export default function ExpensesScreen() {
               {formatDate(formData.date, 'long')}
             </Text>
           </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={new Date(formData.date)}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-            />
-          )}
 
           {/* Description */}
           <Text style={[styles.inputLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('forms.descriptionLabel')}</Text>
@@ -563,6 +555,35 @@ export default function ExpensesScreen() {
 
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        {Platform.OS === 'ios' && showDatePicker && (
+          <View style={[styles.datePickerContainer, { backgroundColor: isDark ? colors.neutral[800] : '#fff', borderTopColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+            <View style={[styles.datePickerHeader, { borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[200] }]}>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Text style={{ color: colors.neutral[500], fontSize: 16 }}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Text style={{ color: colors.primary[600], fontWeight: '600', fontSize: 16 }}>{t('common.done')}</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={new Date(formData.date)}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              textColor={isDark ? '#fff' : '#000'}
+              style={{ height: 200 }}
+            />
+          </View>
+        )}
+        {Platform.OS === 'android' && showDatePicker && (
+          <DateTimePicker
+            value={new Date(formData.date)}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
       </KeyboardAvoidingView>
     </>
   );
@@ -1101,5 +1122,15 @@ const styles = StyleSheet.create({
   uploadingText: {
     fontSize: 14,
     color: themeColors.neutral[500],
+  },
+  datePickerContainer: {
+    borderTopWidth: 1,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
 });
