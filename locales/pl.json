@@ -1,0 +1,6 @@
+{
+  "CFBundleDisplayName": "HomeNest",
+  "CFBundleName": "HomeNest",
+  "NSCameraUsageDescription": "HomeNest potrzebuje dostępu do aparatu, aby robić zdjęcia paragonów i projektów.",
+  "NSPhotoLibraryUsageDescription": "HomeNest potrzebuje dostępu do biblioteki zdjęć, aby przesyłać paragony i dokumenty."
+}

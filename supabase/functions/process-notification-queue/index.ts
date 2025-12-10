@@ -3,16 +3,18 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const RESEND_API_URL = "https://api.resend.com/emails";
+const MAX_RETRIES = 3;
+const BATCH_SIZE = 10;
+
+interface QueueMessage {
+  msg_id: number;
+  read_ct: number;
+  message: NotificationPayload;
+}
 
 interface NotificationPayload {
   userId: string;
-  type:
-    | "todo_due_reminder"
-    | "todo_overdue"
-    | "stage_starting"
-    | "stage_completed"
-    | "budget_warning"
-    | "budget_exceeded";
+  type: string;
   title: string;
   body: string;
   data?: Record<string, unknown>;
@@ -31,7 +33,6 @@ interface UserPreferences {
   budgetAlerts: boolean;
   budgetWarning: boolean;
   budgetExceeded: boolean;
-  reminderTiming: string;
 }
 
 // Escape HTML to prevent XSS
@@ -63,25 +64,19 @@ function generateEmailHtml(title: string, body: string, data?: Record<string, un
     <tr>
       <td style="padding: 40px 20px;">
         <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 32px 40px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">HomeNest</h1>
             </td>
           </tr>
-
-          <!-- Content -->
           <tr>
             <td style="padding: 40px;">
               ${projectName ? `<p style="margin: 0 0 8px 0; color: #6366f1; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${projectName}</p>` : ""}
               <h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 24px; font-weight: 600;">${safeTitle}</h2>
               <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">${safeBody}</p>
-
               <a href="homenest://open" style="display: inline-block; background-color: #6366f1; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">Open in App</a>
             </td>
           </tr>
-
-          <!-- Footer -->
           <tr>
             <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; color: #9ca3af; font-size: 14px; text-align: center;">
@@ -229,6 +224,113 @@ async function hasDuplicateNotification(
   return (data?.length ?? 0) > 0;
 }
 
+// Process a single notification
+async function processNotification(
+  supabase: ReturnType<typeof createClient>,
+  payload: NotificationPayload
+): Promise<{ success: boolean; error?: string }> {
+  const { userId, type, title, body, data, relatedType, relatedId } = payload;
+
+  // Get user data
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+
+  if (userError || !userData.user) {
+    return { success: false, error: "User not found" };
+  }
+
+  const userEmail = userData.user.email;
+
+  // Get user preferences
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("preferences")
+    .eq("id", userId)
+    .single();
+
+  const defaultPrefs: UserPreferences = {
+    pushEnabled: true,
+    emailEnabled: true,
+    todoReminders: true,
+    overdueReminders: true,
+    stageUpdates: true,
+    stageStarting: true,
+    stageCompleted: true,
+    budgetAlerts: true,
+    budgetWarning: true,
+    budgetExceeded: true,
+  };
+
+  const prefs: UserPreferences = profile?.preferences?.notifications || defaultPrefs;
+
+  // Check if this notification type is enabled
+  if (!isNotificationTypeEnabled(type, prefs)) {
+    return { success: true }; // Not an error, just skipped
+  }
+
+  let hasError = false;
+
+  // Send push notification if enabled
+  if (prefs.pushEnabled) {
+    const hasDuplicate = await hasDuplicateNotification(supabase, userId, type, relatedId, "push");
+
+    if (!hasDuplicate) {
+      const { data: tokens } = await supabase
+        .from("push_tokens")
+        .select("token")
+        .eq("user_id", userId)
+        .eq("is_active", true);
+
+      if (tokens && tokens.length > 0) {
+        const pushTokens = tokens.map((t) => t.token);
+        const result = await sendPushNotification(pushTokens, title, body, data);
+
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type,
+          title,
+          body,
+          data,
+          channel: "push",
+          status: result.success ? "sent" : "failed",
+          sent_at: result.success ? new Date().toISOString() : null,
+          error_message: result.error,
+          related_type: relatedType,
+          related_id: relatedId,
+        });
+
+        if (!result.success) hasError = true;
+      }
+    }
+  }
+
+  // Send email notification if enabled
+  if (prefs.emailEnabled && userEmail) {
+    const hasDuplicate = await hasDuplicateNotification(supabase, userId, type, relatedId, "email");
+
+    if (!hasDuplicate) {
+      const result = await sendEmail(userEmail, title, body, data);
+
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type,
+        title,
+        body,
+        data,
+        channel: "email",
+        status: result.success ? "sent" : "failed",
+        sent_at: result.success ? new Date().toISOString() : null,
+        error_message: result.error,
+        related_type: relatedType,
+        related_id: relatedId,
+      });
+
+      if (!result.success) hasError = true;
+    }
+  }
+
+  return { success: !hasError };
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -242,136 +344,89 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   try {
-    const payload: NotificationPayload = await req.json();
-    const { userId, type, title, body, data, relatedType, relatedId } = payload;
-
-    if (!userId || !type || !title || !body) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: userId, type, title, body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create Supabase client with service role
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user profile with preferences and email
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    // Read messages from queue with 30 second visibility timeout
+    const { data: messages, error: readError } = await supabase.rpc("pgmq_read", {
+      queue_name: "notifications",
+      vt: 30,
+      qty: BATCH_SIZE,
+    });
 
-    if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+    if (readError) {
+      // Try alternative: direct SQL query
+      const { data: messagesAlt, error: altError } = await supabase
+        .from("pgmq.q_notifications")
+        .select("msg_id, read_ct, message")
+        .limit(BATCH_SIZE);
+
+      if (altError) {
+        console.error("Failed to read queue:", altError);
+        return new Response(
+          JSON.stringify({ error: "Failed to read queue", details: altError.message }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
-    const userEmail = userData.user.email;
+    const queueMessages: QueueMessage[] = messages || [];
 
-    // Get user preferences from profile
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("preferences")
-      .eq("id", userId)
-      .single();
-
-    const defaultPrefs: UserPreferences = {
-      pushEnabled: true,
-      emailEnabled: true,
-      todoReminders: true,
-      overdueReminders: true,
-      stageUpdates: true,
-      stageStarting: true,
-      stageCompleted: true,
-      budgetAlerts: true,
-      budgetWarning: true,
-      budgetExceeded: true,
-      reminderTiming: "1day",
-    };
-
-    const prefs: UserPreferences = profile?.preferences?.notifications || defaultPrefs;
-
-    // Check if this notification type is enabled
-    if (!isNotificationTypeEnabled(type, prefs)) {
+    if (queueMessages.length === 0) {
       return new Response(
-        JSON.stringify({ message: "Notification type disabled by user preferences" }),
+        JSON.stringify({ message: "No messages to process" }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const results: { push?: { success: boolean; error?: string }; email?: { success: boolean; error?: string } } = {};
+    const results: { msgId: number; success: boolean; error?: string }[] = [];
 
-    // Send push notification if enabled
-    if (prefs.pushEnabled) {
-      // Check for duplicates
-      const hasDuplicate = await hasDuplicateNotification(supabase, userId, type, relatedId, "push");
+    for (const msg of queueMessages) {
+      const payload = msg.message;
 
-      if (!hasDuplicate) {
-        // Get active push tokens
-        const { data: tokens } = await supabase
-          .from("push_tokens")
-          .select("token")
-          .eq("user_id", userId)
-          .eq("is_active", true);
-
-        if (tokens && tokens.length > 0) {
-          const pushTokens = tokens.map((t) => t.token);
-          results.push = await sendPushNotification(pushTokens, title, body, data);
-
-          // Record notification
-          await supabase.from("notifications").insert({
-            user_id: userId,
-            type,
-            title,
-            body,
-            data,
-            channel: "push",
-            status: results.push.success ? "sent" : "failed",
-            sent_at: results.push.success ? new Date().toISOString() : null,
-            error_message: results.push.error,
-            related_type: relatedType,
-            related_id: relatedId,
-          });
-        }
-      }
-    }
-
-    // Send email notification if enabled
-    if (prefs.emailEnabled && userEmail) {
-      // Check for duplicates
-      const hasDuplicate = await hasDuplicateNotification(supabase, userId, type, relatedId, "email");
-
-      if (!hasDuplicate) {
-        results.email = await sendEmail(userEmail, title, body, data);
-
-        // Record notification
-        await supabase.from("notifications").insert({
-          user_id: userId,
-          type,
-          title,
-          body,
-          data,
-          channel: "email",
-          status: results.email.success ? "sent" : "failed",
-          sent_at: results.email.success ? new Date().toISOString() : null,
-          error_message: results.email.error,
-          related_type: relatedType,
-          related_id: relatedId,
+      // Check retry count
+      if (msg.read_ct > MAX_RETRIES) {
+        // Move to dead letter / archive
+        await supabase.rpc("pgmq_archive", {
+          queue_name: "notifications",
+          msg_id: msg.msg_id,
         });
+        results.push({ msgId: msg.msg_id, success: false, error: "Max retries exceeded" });
+        continue;
+      }
+
+      try {
+        const result = await processNotification(supabase, payload);
+
+        if (result.success) {
+          // Delete successfully processed message
+          await supabase.rpc("pgmq_delete", {
+            queue_name: "notifications",
+            msg_id: msg.msg_id,
+          });
+          results.push({ msgId: msg.msg_id, success: true });
+        } else {
+          // Leave in queue for retry (visibility timeout will expire)
+          results.push({ msgId: msg.msg_id, success: false, error: result.error });
+        }
+      } catch (error) {
+        console.error(`Error processing message ${msg.msg_id}:`, error);
+        results.push({ msgId: msg.msg_id, success: false, error: error.message });
       }
     }
+
+    const successCount = results.filter((r) => r.success).length;
+    const failCount = results.filter((r) => !r.success).length;
 
     return new Response(
-      JSON.stringify({ success: true, results }),
+      JSON.stringify({
+        processed: queueMessages.length,
+        success: successCount,
+        failed: failCount,
+        results,
+      }),
       {
         status: 200,
         headers: {
@@ -381,7 +436,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
-    console.error("Error in send-notification:", error);
+    console.error("Error in process-notification-queue:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -34,12 +34,10 @@ export async function pickReceiptImage(useCamera: boolean = false): Promise<stri
     ? await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 1,
-        allowsEditing: true,
       })
     : await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 1,
-        allowsEditing: true,
       });
 
   if (result.canceled || !result.assets[0]) {
@@ -85,7 +83,7 @@ export async function uploadReceiptImage(
 
     // Read file as bytes using new File API
     const file = new File(compressedUri);
-    const bytes = file.bytes();
+    const bytes = await file.bytes();
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage

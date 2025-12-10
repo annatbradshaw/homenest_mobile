@@ -12,6 +12,8 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -42,7 +44,7 @@ import { useLanguage } from '../../../stores/LanguageContext';
 import { colors as themeColors } from '../../../config/theme';
 import { ExpenseStatus } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
-import { pickReceiptImage, uploadReceiptImage, getReceiptSignedUrl } from '../../../utils/receiptUpload';
+import { pickReceiptImage, uploadReceiptImage, getReceiptSignedUrl, deleteReceiptImage } from '../../../utils/receiptUpload';
 
 type EditView = 'form' | 'stage' | 'supplier';
 
@@ -109,6 +111,7 @@ export default function ExpenseDetailScreen() {
   const [receiptImageUri, setReceiptImageUri] = useState<string | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [receiptSignedUrl, setReceiptSignedUrl] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Fetch signed URL for receipt when expense loads
   useEffect(() => {
@@ -193,6 +196,7 @@ export default function ExpenseDetailScreen() {
 
   const handleRemoveReceipt = () => {
     setReceiptImageUri(null);
+    setReceiptSignedUrl(null);
     setFormData(prev => ({ ...prev, receipt_url: '' }));
   };
 
@@ -204,6 +208,7 @@ export default function ExpenseDetailScreen() {
     }
     try {
       let receiptUrl = formData.receipt_url;
+      const oldReceiptUrl = expense.receipt_url;
 
       // Upload new receipt if selected
       if (receiptImageUri && user) {
@@ -221,6 +226,11 @@ export default function ExpenseDetailScreen() {
           return;
         }
         receiptUrl = result.url;
+      }
+
+      // Delete old receipt from storage if it was removed or replaced
+      if (oldReceiptUrl && oldReceiptUrl !== receiptUrl) {
+        await deleteReceiptImage(oldReceiptUrl);
       }
 
       await updateExpense.mutateAsync({
@@ -812,9 +822,13 @@ export default function ExpenseDetailScreen() {
         {receiptSignedUrl && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.receipt')}</Text>
-            <View style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}>
+            <TouchableOpacity
+              style={[styles.receiptPreviewContainer, { backgroundColor: isDark ? colors.neutral[800] : colors.neutral[100] }]}
+              onPress={() => setShowImageModal(true)}
+              activeOpacity={0.8}
+            >
               <Image source={{ uri: receiptSignedUrl }} style={styles.receiptPreview} />
-            </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -840,6 +854,30 @@ export default function ExpenseDetailScreen() {
       ) : (
         renderViewMode()
       )}
+
+      {/* Full-screen Receipt Image Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <View style={styles.imageModalContainer}>
+          <TouchableOpacity
+            style={styles.imageModalCloseButton}
+            onPress={() => setShowImageModal(false)}
+          >
+            <X size={24} color="#fff" />
+          </TouchableOpacity>
+          {receiptSignedUrl && (
+            <Image
+              source={{ uri: receiptSignedUrl }}
+              style={styles.fullScreenImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1193,5 +1231,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalCloseButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  fullScreenImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.8,
   },
 });

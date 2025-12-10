@@ -146,6 +146,7 @@ export function usePushNotifications() {
     if (data?.type && data?.relatedId) {
       switch (data.type) {
         case 'todo_due_reminder':
+        case 'todo_overdue':
           if (data.projectId) {
             router.push(`/(tabs)/projects/${data.projectId}?tab=todos&todoId=${data.relatedId}`);
           }

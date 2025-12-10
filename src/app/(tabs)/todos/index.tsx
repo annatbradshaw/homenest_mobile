@@ -617,36 +617,6 @@ export default function TodosScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.filterWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContainer}
-        >
-          {STATUS_FILTERS.map((filter) => (
-            <TouchableOpacity
-              key={filter.value}
-              style={[
-                styles.filterTab,
-                {
-                  backgroundColor: statusFilter === filter.value ? colors.primary[600] : (isDark ? colors.neutral[800] : '#fff'),
-                  borderColor: statusFilter === filter.value ? colors.primary[600] : (isDark ? colors.neutral[700] : colors.neutral[200])
-                }
-              ]}
-              onPress={() => setStatusFilter(filter.value)}
-            >
-              <Text style={[
-                styles.filterText,
-                { color: statusFilter === filter.value ? '#fff' : (isDark ? colors.neutral[400] : colors.neutral[600]) }
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -677,6 +647,33 @@ export default function TodosScreen() {
             </Text>
           </View>
         )}
+
+        {/* Filter Section */}
+        <View style={styles.filterSection}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('todos.title')}</Text>
+          <View style={styles.filterRow}>
+            {STATUS_FILTERS.map((filter) => (
+              <TouchableOpacity
+                key={filter.value}
+                style={[
+                  styles.filterTab,
+                  {
+                    backgroundColor: statusFilter === filter.value ? colors.primary[600] : (isDark ? colors.neutral[800] : '#fff'),
+                    borderColor: statusFilter === filter.value ? colors.primary[600] : (isDark ? colors.neutral[700] : colors.neutral[200])
+                  }
+                ]}
+                onPress={() => setStatusFilter(filter.value)}
+              >
+                <Text style={[
+                  styles.filterText,
+                  { color: statusFilter === filter.value ? '#fff' : (isDark ? colors.neutral[400] : colors.neutral[600]) }
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
         {sortedTodos.length > 0 ? (
           <View style={[styles.taskList, {
@@ -852,13 +849,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterWrapper: {
-    paddingBottom: 16,
+  filterSection: {
+    marginBottom: 16,
   },
-  filterContainer: {
-    paddingHorizontal: 20,
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: themeColors.neutral[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  filterRow: {
     flexDirection: 'row',
-    alignItems: 'center',
   },
   filterTab: {
     paddingHorizontal: 16,

@@ -1,0 +1,6 @@
+{
+  "CFBundleDisplayName": "HomeNest",
+  "CFBundleName": "HomeNest",
+  "NSCameraUsageDescription": "HomeNest needs camera access to capture receipts and project photos.",
+  "NSPhotoLibraryUsageDescription": "HomeNest needs photo library access to upload receipts and documents."
+}
