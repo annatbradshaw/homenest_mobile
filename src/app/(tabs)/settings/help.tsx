@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ChevronLeft, ChevronRight, MessageCircle, Mail, FileText, ExternalLink } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 
 interface HelpItemProps {
   icon: React.ReactNode;
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -203,11 +203,12 @@ const styles = StyleSheet.create({
   },
   helpTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   helpDescription: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -228,12 +229,13 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: 6,
   },
   faqAnswer: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[600],
     lineHeight: 20,
   },

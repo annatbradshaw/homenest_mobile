@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 
 export default function PrivacyScreen() {
   const { isDark, colors } = useTheme();
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginBottom: 24,
   },
@@ -139,18 +140,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: 12,
   },
   paragraph: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[600],
     lineHeight: 24,
     marginBottom: 8,
   },
   bulletPoint: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[600],
     lineHeight: 24,
     paddingLeft: 8,

@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   scrollView: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: spacing[4],
   },
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[700],
     marginBottom: spacing[1.5],
   },
@@ -323,6 +323,7 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   dateButtonPlaceholder: {
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   },
   statusOptionText: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[700],
   },
   statusOptionTextActive: {

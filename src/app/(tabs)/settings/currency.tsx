@@ -5,6 +5,7 @@ import { ChevronLeft, Check } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { useCurrency, SUPPORTED_CURRENCIES, CurrencyInfo } from '../../../stores/CurrencyContext';
+import { typography } from '../../../config/theme';
 
 export default function CurrencyScreen() {
   const { isDark, colors } = useTheme();
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -137,6 +138,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     lineHeight: 20,
     marginBottom: 20,
   },
@@ -168,17 +170,18 @@ const styles = StyleSheet.create({
   },
   symbol: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   currencyDetails: {
     gap: 2,
   },
   currencyName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   currencyCode: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
   },
   checkCircle: {
     width: 24,
@@ -194,11 +197,12 @@ const styles = StyleSheet.create({
   },
   exampleLabel: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     marginBottom: 8,
   },
   exampleValue: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayBold,
     letterSpacing: -0.5,
   },
 });

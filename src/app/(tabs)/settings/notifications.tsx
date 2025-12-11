@@ -6,7 +6,7 @@ import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { usePreferences } from '../../../stores/PreferencesContext';
 import { usePushNotifications } from '../../../hooks/usePushNotifications';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 import { DEFAULT_NOTIFICATION_PREFERENCES } from '../../../types/preferences';
 
 interface ToggleItemProps {
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   statusText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   section: {
     marginBottom: 24,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -517,6 +517,7 @@ const styles = StyleSheet.create({
   },
   sectionDescription: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 8,
     lineHeight: 18,
@@ -550,11 +551,12 @@ const styles = StyleSheet.create({
   },
   toggleTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   toggleDescription: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -575,10 +577,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     textAlign: 'center',
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   numberSuffix: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
 });

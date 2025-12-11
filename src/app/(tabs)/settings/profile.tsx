@@ -6,7 +6,7 @@ import { ChevronLeft, Camera } from 'lucide-react-native';
 import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 
 export default function ProfileScreen() {
   const { isDark, colors } = useTheme();
@@ -132,12 +132,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   saveButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   avatarSection: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   changePhotoButton: {
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   changePhotoText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.primary[600],
   },
   form: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[700],
     marginBottom: 8,
   },
@@ -192,6 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   inputDisabled: {
@@ -200,6 +201,7 @@ const styles = StyleSheet.create({
   },
   inputHint: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
     marginTop: 6,
   },

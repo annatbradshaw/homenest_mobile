@@ -103,10 +103,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
       if (data?.preferences) {
         const dbPrefs = data.preferences as Partial<UserPreferences>;
+        const dbNotifications = dbPrefs.notifications as Record<string, unknown> | undefined;
+
         // Migrate notification preferences from legacy format if needed
-        const notifications = migrateNotificationPreferences(
-          dbPrefs.notifications as Record<string, unknown> | undefined
-        );
+        const notifications = migrateNotificationPreferences(dbNotifications);
         const merged = {
           ...DEFAULT_PREFERENCES,
           ...getDeviceDefaults(),
@@ -117,8 +117,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         // Update local cache
         await AsyncStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(merged));
 
-        // If migration happened, save updated preferences back to DB
-        if (dbPrefs.notifications && !('pushEnabled' in dbPrefs.notifications)) {
+        // Check if any notification fields were missing and need to be saved back
+        const needsSync = dbNotifications && (
+          !('pushEnabled' in dbNotifications) ||  // Legacy format
+          !('todoReminderDaysBefore' in dbNotifications) ||  // Missing new fields
+          !('overdueReminderFrequency' in dbNotifications)
+        );
+
+        if (needsSync) {
           await supabase
             .from('user_profiles')
             .update({ preferences: merged })

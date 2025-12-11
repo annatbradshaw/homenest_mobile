@@ -14,7 +14,7 @@ import {
 import { useProject } from '../../../stores/ProjectContext';
 import { useSuppliers } from '../../../hooks/useSuppliers';
 import { LoadingSpinner, EmptyState } from '../../../components/ui';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 14,
     color: themeColors.neutral[600],
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   filterChipTextActive: {
     color: '#fff',
@@ -386,12 +386,13 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayBold,
     color: themeColors.neutral[900],
     letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -414,11 +415,12 @@ const styles = StyleSheet.create({
   },
   supplierName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   contactName: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'capitalize',
   },
   contactSection: {
@@ -453,6 +455,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     flex: 1,
   },
@@ -470,6 +473,6 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
 });

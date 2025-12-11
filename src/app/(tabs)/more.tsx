@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
@@ -13,8 +13,9 @@ import {
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
-import { typography } from '../../config/theme';
+import { typography, colors as themeColors } from '../../config/theme';
 import { Avatar } from '../../components/ui';
+import { NestIcon } from '../../components/graphics';
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -199,21 +200,16 @@ export default function MoreScreen() {
           {t('settings.version')}
         </Text>
 
-        {/* Logo */}
+        {/* Logo - Horizontal layout (primary format per brandbook) */}
         <View style={styles.logoContainer}>
-          {isDark ? (
-            <Image
-              source={require('../../../main_logo_transparent.png')}
-              style={[styles.logo, { tintColor: '#FFFFFF' }]}
-              resizeMode="contain"
-            />
-          ) : (
-            <Image
-              source={require('../../../main_logo_transparent.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          )}
+          <NestIcon
+            size={40}
+            color={isDark ? themeColors.neutral[300] : themeColors.primary[500]}
+            accentColor={isDark ? themeColors.accent[400] : themeColors.accent[500]}
+          />
+          <Text style={[styles.logoText, { color: isDark ? colors.neutral[300] : colors.primary[600] }]}>
+            HomeNest
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -300,11 +296,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 32,
+    gap: 10,
   },
-  logo: {
-    width: 140,
-    height: 40,
+  logoText: {
+    fontSize: 22,
+    fontFamily: typography.fontFamily.displayMedium,
+    letterSpacing: -0.5,
   },
 });

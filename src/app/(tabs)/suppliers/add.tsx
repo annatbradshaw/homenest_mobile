@@ -16,7 +16,7 @@ import {
 import { useProject } from '../../../stores/ProjectContext';
 import { useCreateSupplier } from '../../../hooks/useSuppliers';
 import { useStages } from '../../../hooks/useStages';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   saveButtonContainer: {
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   saveButtonDisabled: {
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -384,6 +384,7 @@ const styles = StyleSheet.create({
   },
   sectionSubtitle: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
     marginTop: -8,
     marginBottom: 12,
@@ -408,6 +409,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   divider: {
@@ -423,6 +425,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   ratingRow: {
@@ -433,6 +436,7 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   starsContainer: {
@@ -453,11 +457,12 @@ const styles = StyleSheet.create({
   },
   stageName: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   stageCategory: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
     textTransform: 'capitalize',
@@ -465,6 +470,7 @@ const styles = StyleSheet.create({
   textArea: {
     padding: 16,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
     minHeight: 100,
   },

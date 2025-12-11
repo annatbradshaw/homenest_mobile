@@ -20,6 +20,7 @@ import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { useCurrency } from '../../../stores/CurrencyContext';
+import { typography } from '../../../config/theme';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -341,17 +342,18 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 22,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   profileEmail: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     marginTop: 2,
   },
   section: {
@@ -360,7 +362,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -388,10 +390,11 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   settingSubtitle: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     marginTop: 2,
   },
   divider: {
@@ -400,6 +403,7 @@ const styles = StyleSheet.create({
   },
   version: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 32,

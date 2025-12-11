@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   menuButton: {
@@ -358,6 +358,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.fontSize.lg,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginBottom: spacing[4],
   },
@@ -376,10 +377,12 @@ const styles = StyleSheet.create({
   },
   dueDate: {
     fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   description: {
     fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[700],
     lineHeight: typography.fontSize.base * typography.lineHeight.normal,
     marginBottom: spacing[4],
@@ -392,6 +395,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[600],
   },
   budgetCard: {
@@ -405,7 +409,7 @@ const styles = StyleSheet.create({
   },
   budgetTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   budgetAmounts: {
@@ -423,11 +427,12 @@ const styles = StyleSheet.create({
   },
   budgetValue: {
     fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
+    fontFamily: typography.fontFamily.displayBold,
     color: themeColors.neutral[900],
   },
   budgetLabel: {
     fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: spacing[1],
   },
@@ -449,7 +454,7 @@ const styles = StyleSheet.create({
   },
   budgetPercent: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[700],
     minWidth: 40,
     textAlign: 'right',
@@ -470,12 +475,13 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
+    fontFamily: typography.fontFamily.displayBold,
     color: themeColors.neutral[900],
     marginTop: spacing[2],
   },
   statLabel: {
     fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: spacing[1],
   },
@@ -490,13 +496,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   sectionLink: {
     fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.primary[600],
-    fontWeight: typography.fontWeight.medium,
   },
   stageCard: {
     marginBottom: spacing[2],
@@ -516,11 +522,12 @@ const styles = StyleSheet.create({
   },
   stageName: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   stageCategory: {
     fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textTransform: 'capitalize',
   },
@@ -542,10 +549,12 @@ const styles = StyleSheet.create({
   },
   todoTitle: {
     fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   todoDue: {
     fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: spacing[1],
   },

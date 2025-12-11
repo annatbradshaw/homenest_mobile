@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
   TextInput,
 } from 'react-native';
 import { Link, router } from 'expo-router';
@@ -17,6 +16,7 @@ import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
 import { colors, typography, spacing } from '../../config/theme';
+import { NestIcon } from '../../components/graphics';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -61,12 +61,14 @@ export default function LoginScreen() {
           >
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <Image
-                source={require('../../../main_logo_transparent.png')}
-                style={styles.logo}
-                resizeMode="contain"
-                tintColor={isDark ? '#FFFFFF' : undefined}
+              <NestIcon
+                size={56}
+                color={isDark ? colors.neutral[300] : colors.primary[500]}
+                accentColor={isDark ? colors.accent[400] : colors.accent[500]}
               />
+              <Text style={[styles.logoText, { color: isDark ? colors.neutral[300] : colors.primary[600] }]}>
+                HomeNest
+              </Text>
             </View>
 
             {/* Form */}
@@ -163,12 +165,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 40,
+    gap: 12,
   },
-  logo: {
-    width: 200,
-    height: 56,
+  logoText: {
+    fontSize: 32,
+    fontFamily: typography.fontFamily.displayMedium,
+    letterSpacing: -0.5,
   },
   form: {
     gap: 12,

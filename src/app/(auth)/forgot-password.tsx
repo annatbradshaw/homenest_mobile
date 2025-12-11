@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
   TextInput,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -17,7 +16,8 @@ import { ArrowLeft, Mail } from 'lucide-react-native';
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
-import { colors } from '../../config/theme';
+import { colors, typography } from '../../config/theme';
+import { NestIcon } from '../../components/graphics';
 
 export default function ForgotPasswordScreen() {
   const { resetPassword } = useAuth();
@@ -104,12 +104,14 @@ export default function ForgotPasswordScreen() {
 
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <Image
-                source={require('../../../main_logo_transparent.png')}
-                style={styles.logo}
-                resizeMode="contain"
-                tintColor={isDark ? '#FFFFFF' : undefined}
+              <NestIcon
+                size={48}
+                color={isDark ? colors.neutral[300] : colors.primary[500]}
+                accentColor={isDark ? colors.accent[400] : colors.accent[500]}
               />
+              <Text style={[styles.logoText, { color: isDark ? colors.neutral[300] : colors.primary[600] }]}>
+                HomeNest
+              </Text>
             </View>
 
             {/* Header */}
@@ -187,12 +189,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 32,
+    gap: 10,
   },
-  logo: {
-    width: 180,
-    height: 50,
+  logoText: {
+    fontSize: 28,
+    fontFamily: typography.fontFamily.displayMedium,
+    letterSpacing: -0.5,
   },
   title: {
     fontSize: 24,

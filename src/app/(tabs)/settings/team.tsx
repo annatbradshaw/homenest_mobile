@@ -34,6 +34,7 @@ import { useProject } from '../../../stores/ProjectContext';
 import { useSuppliers } from '../../../hooks/useSuppliers';
 import { useInviteToProject } from '../../../hooks/useInviteToProject';
 import { MemberRole, Supplier } from '../../../types/database';
+import { typography } from '../../../config/theme';
 
 const ROLE_CONFIG: Record<MemberRole, { icon: any; color: string; darkColor: string }> = {
   owner: { icon: Crown, color: '#F59E0B', darkColor: '#FBBF24' },
@@ -499,7 +500,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -518,6 +519,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     lineHeight: 20,
     marginBottom: 20,
   },
@@ -548,7 +550,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   memberInfo: {
     flex: 1,
@@ -561,7 +563,7 @@ const styles = StyleSheet.create({
   },
   memberName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   youBadge: {
     paddingHorizontal: 8,
@@ -570,7 +572,7 @@ const styles = StyleSheet.create({
   },
   youBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   roleRow: {
     flexDirection: 'row',
@@ -579,6 +581,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -587,10 +590,11 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   emptyDesc: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
   },
   legendSection: {
@@ -599,7 +603,7 @@ const styles = StyleSheet.create({
   },
   legendTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -621,10 +625,11 @@ const styles = StyleSheet.create({
   },
   legendRole: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   legendDesc: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     lineHeight: 18,
   },
   modalOverlay: {
@@ -648,14 +653,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   inputGroup: {
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     marginBottom: 8,
   },
   inputContainer: {
@@ -670,6 +675,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
   },
   roleOptions: {
     flexDirection: 'row',
@@ -687,7 +693,7 @@ const styles = StyleSheet.create({
   },
   roleOptionText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   sendButton: {
     flexDirection: 'row',
@@ -700,7 +706,7 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: '#fff',
   },
   supplierSelector: {
@@ -715,6 +721,7 @@ const styles = StyleSheet.create({
   supplierSelectorText: {
     flex: 1,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
   },
   supplierDropdown: {
     marginTop: 8,
@@ -737,10 +744,11 @@ const styles = StyleSheet.create({
   },
   supplierOptionName: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   supplierOptionSpecialty: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
   },
   noSuppliersContainer: {
     padding: 20,
@@ -749,6 +757,7 @@ const styles = StyleSheet.create({
   },
   noSuppliersText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
   },
   addSupplierLink: {
@@ -759,10 +768,11 @@ const styles = StyleSheet.create({
   },
   addSupplierText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   supplierHint: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     marginTop: 6,
     lineHeight: 16,
   },

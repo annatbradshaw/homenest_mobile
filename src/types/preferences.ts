@@ -53,6 +53,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 };
 
 // Migration helper for existing users with old preference format
+// Always merges with defaults to ensure all fields exist
 export function migrateNotificationPreferences(
   old: Record<string, unknown> | undefined
 ): NotificationPreferences {
@@ -61,9 +62,18 @@ export function migrateNotificationPreferences(
   // Start with defaults
   const result = { ...DEFAULT_NOTIFICATION_PREFERENCES };
 
-  // Check if already migrated (has new granular fields)
+  // Check if already has new granular fields - merge with defaults to fill any gaps
   if ('stageStarting' in old && 'budgetWarning' in old) {
-    return old as unknown as NotificationPreferences;
+    const existing = old as Partial<NotificationPreferences>;
+    return {
+      ...result,
+      ...existing,
+      // Ensure number fields have valid values (not undefined)
+      todoReminderDaysBefore: existing.todoReminderDaysBefore ?? result.todoReminderDaysBefore,
+      overdueReminderFrequency: existing.overdueReminderFrequency ?? result.overdueReminderFrequency,
+      stageStartingDaysBefore: existing.stageStartingDaysBefore ?? result.stageStartingDaysBefore,
+      budgetWarningThreshold: existing.budgetWarningThreshold ?? result.budgetWarningThreshold,
+    };
   }
 
   // Partial migration - has some new fields but not granular ones

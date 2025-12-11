@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayBold,
     color: themeColors.neutral[900],
     letterSpacing: -0.5,
   },
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 14,
     color: themeColors.neutral[600],
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   filterChipTextActive: {
     color: '#fff',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   projectName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     flex: 1,
     marginRight: 8,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   detailRow: {
     flexDirection: 'row',
@@ -324,6 +324,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     flex: 1,
   },

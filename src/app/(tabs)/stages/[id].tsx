@@ -10,6 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { ConfettiCelebration } from '../../../components/animations';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -36,7 +37,7 @@ import { useExpenses } from '../../../hooks/useExpenses';
 import { useProject } from '../../../stores/ProjectContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
 import { StageStatus, StageCategory } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
 
@@ -74,6 +75,7 @@ export default function StageDetailScreen() {
 
   const stage = stages?.find(s => s.id === id);
   const [isEditing, setIsEditing] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -166,6 +168,9 @@ export default function StageDetailScreen() {
       return;
     }
     try {
+      const wasNotCompleted = stage?.status !== 'completed';
+      const isNowCompleted = formData.status === 'completed';
+
       const estimatedCost = formData.estimated_cost ? parseFloat(formData.estimated_cost) : null;
       await updateStage.mutateAsync({
         id: stage.id,
@@ -182,6 +187,11 @@ export default function StageDetailScreen() {
         },
       });
       setIsEditing(false);
+
+      // Trigger confetti when stage is marked as completed
+      if (wasNotCompleted && isNowCompleted) {
+        setShowConfetti(true);
+      }
     } catch (error) {
       Alert.alert(t('common.error'), t('errors.failedUpdateStage'));
     }
@@ -679,6 +689,12 @@ export default function StageDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Confetti celebration when stage is completed */}
+      <ConfettiCelebration
+        visible={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -704,14 +720,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   headerSpacer: {
     width: 40,
   },
   editButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   scrollView: {
@@ -724,6 +740,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
   },
   section: {
     paddingHorizontal: 20,
@@ -735,18 +752,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
   },
   stageName: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayBold,
     marginBottom: 8,
   },
   stageDescription: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     lineHeight: 24,
     marginBottom: 12,
   },
@@ -763,7 +781,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   categoryBadge: {
     flexDirection: 'row',
@@ -775,7 +793,7 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   card: {
     borderRadius: 12,
@@ -792,10 +810,11 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
   },
   cardValue: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   cardDivider: {
     height: 1,
@@ -812,7 +831,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   taskCompleted: {
     textDecorationLine: 'line-through',
@@ -821,7 +840,7 @@ const styles = StyleSheet.create({
   // Form styles
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     marginBottom: 8,
     marginTop: 16,
   },
@@ -831,6 +850,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
   },
   textArea: {
     minHeight: 100,
@@ -850,7 +870,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   statusOptions: {
     flexDirection: 'row',
@@ -868,7 +888,7 @@ const styles = StyleSheet.create({
   },
   statusOptionText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   dateRow: {
     flexDirection: 'row',
@@ -888,10 +908,11 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   datePlaceholder: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
   },
   datePickerContainer: {
     borderTopWidth: 1,

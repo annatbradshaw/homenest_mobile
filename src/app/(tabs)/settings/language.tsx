@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
+import { typography } from '../../../config/theme';
 
 type Language = 'en' | 'pl';
 
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyMedium,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -177,10 +178,11 @@ const styles = StyleSheet.create({
   },
   languageName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   languageNative: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     marginTop: 2,
   },
   checkIcon: {
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     paddingHorizontal: 40,
   },
