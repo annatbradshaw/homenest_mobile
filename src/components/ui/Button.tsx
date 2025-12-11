@@ -56,7 +56,7 @@ export function Button({
 
   const spinnerColor = variant === 'primary' || variant === 'danger' || variant === 'accent'
     ? colors.white
-    : colors.primary[600];
+    : colors.primary[500];
 
   return (
     <TouchableOpacity
@@ -87,17 +87,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  // Variants
+  // Variants - Updated with brandbook colors
   primary: {
-    backgroundColor: colors.primary[600],
+    backgroundColor: colors.primary[500], // Forest green
   },
   secondary: {
-    backgroundColor: colors.neutral[100],
+    backgroundColor: colors.cream, // Warm cream background
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.neutral[300],
+    borderColor: colors.neutral[200],
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.danger[500],
   },
   accent: {
-    backgroundColor: colors.accent[500],
+    backgroundColor: colors.accent[500], // Terracotta
   },
 
   // Sizes
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: componentStyles.button.sizes.lg.paddingHorizontal,
   },
 
-  // Text styles
+  // Text styles - Updated with brandbook colors
   text: {
     fontWeight: typography.fontWeight.semibold,
   },
@@ -131,13 +131,13 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   secondaryText: {
-    color: colors.neutral[700],
+    color: colors.charcoal,
   },
   outlineText: {
-    color: colors.neutral[700],
+    color: colors.charcoal,
   },
   ghostText: {
-    color: colors.primary[600],
+    color: colors.primary[500], // Forest green
   },
   dangerText: {
     color: colors.white,

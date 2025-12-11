@@ -13,7 +13,7 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({
   size = 'large',
-  color = colors.primary[600],
+  color = colors.primary[500], // Forest green
   message,
   fullScreen = false,
 }: LoadingSpinnerProps) {
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
   },
   message: {
     marginTop: spacing[3],

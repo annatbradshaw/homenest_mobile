@@ -24,11 +24,11 @@ import {
 import { useProject } from '../../stores/ProjectContext';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
-import { colors as themeColors } from '../../config/theme';
+import { colors as themeColors, typography } from '../../config/theme';
 import { useStages } from '../../hooks/useStages';
 import { useTodos } from '../../hooks/useTodos';
 import { useExpenses } from '../../hooks/useExpenses';
-import { LoadingSpinner } from '../../components/ui';
+import { LoadingSpinner, CircularProgress } from '../../components/ui';
 import { useCurrency } from '../../stores/CurrencyContext';
 
 export default function DashboardScreen() {
@@ -185,8 +185,16 @@ export default function DashboardScreen() {
             )}
           </View>
           <View style={styles.projectProgress}>
-            <Text style={styles.progressPercent}>{progress.percentage}%</Text>
-            <Text style={styles.progressLabel}>{t('dashboard.complete')}</Text>
+            <CircularProgress
+              progress={progress.percentage}
+              size={64}
+              strokeWidth={5}
+              progressColor="rgba(255,255,255,0.95)"
+              trackColor="rgba(255,255,255,0.25)"
+              showPercentage={true}
+              textColor="#fff"
+              textStyle={{ fontFamily: typography.fontFamily.displayBold, fontSize: 16 }}
+            />
           </View>
         </Pressable>
 
@@ -495,11 +503,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.displayMedium,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -511,7 +520,7 @@ const styles = StyleSheet.create({
   },
   createBtnText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   headerSpacer: {
     height: 20,
@@ -540,7 +549,7 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   projectCard: {
     flexDirection: 'row',
@@ -559,6 +568,7 @@ const styles = StyleSheet.create({
   },
   projectLabel: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: 'rgba(255,255,255,0.8)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -566,25 +576,28 @@ const styles = StyleSheet.create({
   },
   projectName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.displayMedium,
     color: '#fff',
     marginBottom: 4,
   },
   projectAddress: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: 'rgba(255,255,255,0.75)',
   },
   projectProgress: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
   progressPercent: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayBold,
     color: '#fff',
     letterSpacing: -1,
   },
   progressLabel: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     color: 'rgba(255,255,255,0.75)',
   },
   overviewGrid: {
@@ -606,12 +619,13 @@ const styles = StyleSheet.create({
   },
   overviewValue: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displaySemibold,
     marginBottom: 4,
     letterSpacing: -0.5,
   },
   overviewLabel: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
   },
   budgetBar: {
     height: 4,
@@ -635,7 +649,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -646,6 +660,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
   },
   stageCard: {
     flexDirection: 'row',
@@ -660,11 +675,12 @@ const styles = StyleSheet.create({
   },
   stageName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     marginBottom: 2,
   },
   stageStatus: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
   },
   stageNameRow: {
     flexDirection: 'row',
@@ -681,11 +697,11 @@ const styles = StyleSheet.create({
   },
   stageBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   upcomingDate: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   taskList: {
     borderRadius: 12,
@@ -702,6 +718,7 @@ const styles = StyleSheet.create({
   },
   taskText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
   },
   taskContent: {
     flex: 1,
@@ -715,7 +732,7 @@ const styles = StyleSheet.create({
   },
   dueBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   statusIconContainer: {
     width: 28,

@@ -46,7 +46,7 @@ export function ProjectHeader({
                 <Text style={styles.projectName} numberOfLines={1}>
                   {currentProject?.name || 'Select Project'}
                 </Text>
-                <ChevronDown size={18} color={colors.neutral[500]} />
+                <ChevronDown size={18} color={colors.neutral[400]} />
               </TouchableOpacity>
             ) : (
               <Text style={styles.projectName} numberOfLines={1}>
@@ -83,7 +83,7 @@ export function ProjectHeader({
                     setShowPicker(false);
                   }}
                 >
-                  <FolderOpen size={20} color={colors.neutral[500]} />
+                  <FolderOpen size={20} color={colors.neutral[400]} />
                   <Text style={styles.projectItemName} numberOfLines={1}>
                     {item.name}
                   </Text>
@@ -107,9 +107,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
+    borderBottomColor: colors.neutral[200],
   },
   left: {
     flex: 1,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   right: {},
   label: {
     fontSize: typography.fontSize.sm,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
     marginBottom: spacing[1],
   },
   projectSelector: {
@@ -128,13 +128,13 @@ const styles = StyleSheet.create({
   projectName: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
-    color: colors.neutral[900],
+    color: colors.charcoal,
     maxWidth: 250,
   },
   title: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
-    color: colors.neutral[900],
+    color: colors.charcoal,
   },
   modalOverlay: {
     flex: 1,
@@ -149,15 +149,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     maxHeight: 400,
-    ...shadows.xl,
+    ...shadows.lg,
   },
   modalTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.charcoal,
     padding: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
+    borderBottomColor: colors.neutral[200],
   },
   projectItem: {
     flexDirection: 'row',
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     padding: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[50],
+    borderBottomColor: colors.neutral[100],
   },
   projectItemName: {
     flex: 1,
     fontSize: typography.fontSize.base,
-    color: colors.neutral[900],
+    color: colors.charcoal,
   },
 });
 

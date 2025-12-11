@@ -5,6 +5,21 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  useFonts,
+  Fraunces_300Light,
+  Fraunces_400Regular,
+  Fraunces_500Medium,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  Outfit_300Light,
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Outfit_700Bold,
+} from '@expo-google-fonts/outfit';
 import { AuthProvider } from '../stores/AuthContext';
 import { ProjectProvider } from '../stores/ProjectContext';
 import { ThemeProvider, useTheme } from '../stores/ThemeContext';
@@ -51,6 +66,20 @@ export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
+  // Load custom fonts
+  const [fontsLoaded] = useFonts({
+    Fraunces_300Light,
+    Fraunces_400Regular,
+    Fraunces_500Medium,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    Outfit_300Light,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+  });
+
   useEffect(() => {
     async function prepare() {
       try {
@@ -78,7 +107,7 @@ export default function RootLayout() {
     setSplashAnimationComplete(true);
   }, []);
 
-  if (!appIsReady) {
+  if (!appIsReady || !fontsLoaded) {
     return null;
   }
 

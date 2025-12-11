@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#EEF6FB"
+      "backgroundColor": "#FDFBF8"
     },
     "ios": {
       "supportsTablet": true,
@@ -35,7 +35,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2563EB"
+        "backgroundColor": "#2D5A4A"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.homenest.app",
@@ -94,11 +94,12 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#2563EB",
+          "color": "#2D5A4A",
           "defaultChannel": "default",
           "sounds": []
         }
-      ]
+      ],
+      "expo-font"
     ],
     "locales": {
       "en": "./locales/en.json",

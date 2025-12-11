@@ -28,9 +28,9 @@ export function ProgressBlocks({
         let backgroundColor = colors.neutral[200];
 
         if (index < completedBlocks) {
-          backgroundColor = colors.primary[500];
+          backgroundColor = colors.primary[500]; // Forest green for completed
         } else if (index < completedBlocks + inProgressBlocks) {
-          backgroundColor = colors.primary[300];
+          backgroundColor = colors.accent[500]; // Terracotta for in-progress
         }
 
         return (

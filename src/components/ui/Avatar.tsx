@@ -39,14 +39,15 @@ function getInitials(name?: string): string {
 function getBackgroundColor(name?: string): string {
   if (!name) return colors.neutral[400];
 
+  // Updated color palette with brandbook colors
   const colorPalette = [
-    colors.primary[500],
-    colors.accent[500],
-    colors.success[500],
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#06B6D4', // Cyan
-    '#F97316', // Orange
+    colors.primary[500],    // Forest green
+    colors.accent[500],     // Terracotta
+    colors.primary[400],    // Forest light
+    colors.accent[600],     // Terracotta dark
+    '#8B5CF6',              // Purple
+    '#06B6D4',              // Cyan
+    colors.success[500],    // Green
   ];
 
   let hash = 0;

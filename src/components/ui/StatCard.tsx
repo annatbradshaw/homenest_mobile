@@ -16,7 +16,7 @@ export function StatCard({
   label,
   value,
   subtitle,
-  color = colors.neutral[600],
+  color = colors.primary[500], // Forest green as default
   style,
 }: StatCardProps) {
   return (
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   icon: {},
   label: {
     fontSize: typography.fontSize.sm,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
   },
   value: {
     fontSize: typography.fontSize['2xl'],
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.fontSize.xs,
-    color: colors.neutral[500],
+    color: colors.neutral[400],
     marginTop: spacing[1],
   },
 });

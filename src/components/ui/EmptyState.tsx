@@ -50,13 +50,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.charcoal,
     textAlign: 'center',
     marginBottom: spacing[2],
   },
   description: {
     fontSize: typography.fontSize.base,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
     textAlign: 'center',
     lineHeight: typography.fontSize.base * typography.lineHeight.normal,
   },

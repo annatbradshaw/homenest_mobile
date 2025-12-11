@@ -26,7 +26,8 @@ import { useSuppliers } from '../../../hooks/useSuppliers';
 import { useAuth } from '../../../stores/AuthContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
+import { CircularProgress } from '../../../components/ui';
 import { ExpenseStatus } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
 import { pickReceiptImage, uploadReceiptImage } from '../../../utils/receiptUpload';
@@ -620,20 +621,23 @@ export default function ExpensesScreen() {
       >
         {/* Budget Overview */}
         <View style={styles.budgetCard}>
-          <Text style={styles.budgetLabel}>{t('expenses.totalBudget')}</Text>
-          <Text style={styles.budgetValueLarge}>{formatAmount(budgetStats.budget)}</Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${Math.min(budgetStats.percentage, 100)}%`,
-                  backgroundColor: budgetStats.percentage > 100 ? colors.danger[500] : '#fff',
-                },
-              ]}
+          <View style={styles.budgetCardContent}>
+            <View style={styles.budgetCardText}>
+              <Text style={styles.budgetLabel}>{t('expenses.totalBudget')}</Text>
+              <Text style={styles.budgetValueLarge}>{formatAmount(budgetStats.budget)}</Text>
+              <Text style={styles.budgetSpentText}>{formatAmount(budgetStats.spent)} {t('expenses.spent')}</Text>
+            </View>
+            <CircularProgress
+              progress={Math.min(budgetStats.percentage, 100)}
+              size={80}
+              strokeWidth={7}
+              progressColor={budgetStats.percentage > 100 ? colors.danger[400] : 'rgba(255,255,255,0.95)'}
+              trackColor="rgba(255,255,255,0.25)"
+              showPercentage={true}
+              textColor="#fff"
+              textStyle={{ fontFamily: typography.fontFamily.displayBold, fontSize: 18 }}
             />
           </View>
-          <Text style={styles.percentageText}>{budgetStats.percentage}{t('expenses.budgetUsed')}</Text>
         </View>
 
         {/* Budget Breakdown */}
@@ -745,13 +749,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   addButton: {
@@ -775,6 +780,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   budgetCard: {
@@ -783,17 +789,31 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 12,
   },
+  budgetCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  budgetCardText: {
+    flex: 1,
+  },
   budgetLabel: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: 'rgba(255,255,255,0.7)',
     marginBottom: 4,
   },
   budgetValueLarge: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 28,
+    fontFamily: typography.fontFamily.displayBold,
     color: '#fff',
     letterSpacing: -0.5,
-    marginBottom: 16,
+    marginBottom: 4,
+  },
+  budgetSpentText: {
+    fontSize: 14,
+    fontFamily: typography.fontFamily.body,
+    color: 'rgba(255,255,255,0.75)',
   },
   breakdownRow: {
     flexDirection: 'row',
@@ -810,12 +830,13 @@ const styles = StyleSheet.create({
   },
   breakdownValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: 4,
   },
   breakdownLabel: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   breakdownDivider: {
@@ -834,6 +855,7 @@ const styles = StyleSheet.create({
   },
   percentageText: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: 'rgba(255,255,255,0.7)',
   },
   filterSection: {
@@ -841,7 +863,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -865,7 +887,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[600],
   },
   filterTextActive: {
@@ -893,12 +915,13 @@ const styles = StyleSheet.create({
   },
   expenseDescription: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     marginBottom: 4,
   },
   expenseDate: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   expenseRight: {
@@ -906,12 +929,13 @@ const styles = StyleSheet.create({
   },
   expenseAmount: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: 4,
   },
   expenseStatus: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textTransform: 'capitalize',
   },
@@ -933,12 +957,13 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textAlign: 'center',
   },
@@ -957,12 +982,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   modalSaveText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   modalSaveTextDisabled: {
@@ -973,7 +998,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -982,6 +1007,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
     backgroundColor: themeColors.neutral[50],
     borderRadius: 12,
@@ -1013,11 +1039,12 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[500],
   },
   segmentTextActive: {
     color: themeColors.neutral[900],
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   selectorButton: {
     flexDirection: 'row',
@@ -1033,11 +1060,13 @@ const styles = StyleSheet.create({
   selectorText: {
     flex: 1,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   selectorPlaceholder: {
     flex: 1,
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
   },
   // Selection View Styles
@@ -1070,7 +1099,7 @@ const styles = StyleSheet.create({
   selectionTitle: {
     flex: 1,
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -1091,10 +1120,12 @@ const styles = StyleSheet.create({
   },
   selectionItemText: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   selectionItemSubtext: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -1118,7 +1149,7 @@ const styles = StyleSheet.create({
   },
   receiptButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[600],
   },
   receiptPreviewContainer: {
@@ -1159,6 +1190,7 @@ const styles = StyleSheet.create({
   },
   uploadingText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   datePickerContainer: {

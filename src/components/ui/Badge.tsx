@@ -39,20 +39,20 @@ export function Badge({
           return { bg: colors.neutral[800], text: colors.neutral[400] };
       }
     }
-    // Light mode uses solid backgrounds
+    // Light mode - updated with brandbook colors
     switch (variant) {
       case 'primary':
-        return { bg: colors.primary[100], text: colors.primary[700] };
+        return { bg: colors.cream, text: colors.primary[500] }; // Forest green
       case 'success':
-        return { bg: colors.success[100], text: colors.success[700] };
+        return { bg: '#E8F5E9', text: colors.success[700] };
       case 'warning':
-        return { bg: colors.warning[100], text: colors.warning[700] };
+        return { bg: '#FFF3E0', text: colors.warning[700] };
       case 'danger':
-        return { bg: colors.danger[100], text: colors.danger[700] };
+        return { bg: '#FFEBEE', text: colors.danger[500] };
       case 'accent':
-        return { bg: colors.accent[100], text: colors.accent[700] };
+        return { bg: colors.accent[100], text: colors.accent[700] }; // Terracotta
       default:
-        return { bg: colors.neutral[100], text: colors.neutral[700] };
+        return { bg: colors.neutral[100], text: colors.neutral[600] };
     }
   };
 
@@ -79,7 +79,7 @@ export function Badge({
 const styles = StyleSheet.create({
   base: {
     alignSelf: 'flex-start',
-    borderRadius: 6, // Slightly rounded square shape
+    borderRadius: 6,
   },
 
   // Sizes
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
 
   // Text styles
   text: {
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: typography.fontWeight.semibold,
   },
 
   // Text sizes

@@ -21,7 +21,8 @@ import { useProject } from '../../../stores/ProjectContext';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
 import { useStages, useCreateStage } from '../../../hooks/useStages';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
+import { CircularProgress } from '../../../components/ui';
 import { useSuppliers } from '../../../hooks/useSuppliers';
 import { StageStatus, StageCategory } from '../../../types/database';
 import { isPast, isToday, parseISO } from 'date-fns';
@@ -235,18 +236,22 @@ export default function StagesScreen() {
       >
         {/* Progress Overview */}
         <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>{t('forms.overallProgress')}</Text>
-            <Text style={styles.progressPercent}>
-              {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
-            </Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: stats.total > 0 ? `${(stats.completed / stats.total) * 100}%` : '0%' },
-              ]}
+          <View style={styles.progressCardContent}>
+            <View style={styles.progressCardText}>
+              <Text style={styles.progressTitle}>{t('forms.overallProgress')}</Text>
+              <Text style={styles.progressSubtitle}>
+                {stats.completed} of {stats.total} {t('stages.completed').toLowerCase()}
+              </Text>
+            </View>
+            <CircularProgress
+              progress={stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}
+              size={72}
+              strokeWidth={6}
+              progressColor="rgba(255,255,255,0.95)"
+              trackColor="rgba(255,255,255,0.25)"
+              showPercentage={true}
+              textColor="#fff"
+              textStyle={{ fontFamily: typography.fontFamily.displayBold, fontSize: 18 }}
             />
           </View>
         </View>
@@ -821,13 +826,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   addButton: {
@@ -851,6 +857,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   progressCard: {
@@ -859,32 +866,24 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
   },
-  progressHeader: {
+  progressCardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+  },
+  progressCardText: {
+    flex: 1,
   },
   progressTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 17,
+    fontFamily: typography.fontFamily.displayMedium,
     color: '#fff',
+    marginBottom: 4,
   },
-  progressPercent: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: -0.5,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 3,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 3,
+  progressSubtitle: {
+    fontSize: 14,
+    fontFamily: typography.fontFamily.body,
+    color: 'rgba(255,255,255,0.75)',
   },
   timeline: {
     paddingLeft: 4,
@@ -931,6 +930,7 @@ const styles = StyleSheet.create({
   },
   stageNumber: {
     fontSize: 12,
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -938,12 +938,13 @@ const styles = StyleSheet.create({
   },
   stageName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     marginBottom: 4,
   },
   stageDescription: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     lineHeight: 20,
     marginBottom: 8,
@@ -957,6 +958,7 @@ const styles = StyleSheet.create({
   },
   stageDateText: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   statusBadge: {
@@ -967,7 +969,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   emptyState: {
     alignItems: 'center',
@@ -984,12 +986,13 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textAlign: 'center',
   },
@@ -1008,12 +1011,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   modalSaveText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.primary[600],
   },
   modalSaveTextDisabled: {
@@ -1031,7 +1034,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.bodyBold,
     color: themeColors.neutral[900],
     marginBottom: 16,
   },
@@ -1043,23 +1046,25 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.bodyBold,
     color: themeColors.neutral[900],
   },
   sectionSubtext: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginBottom: 12,
     marginTop: -8,
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[500],
     marginBottom: 8,
   },
   textInput: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
     backgroundColor: themeColors.neutral[50],
     borderRadius: 12,
@@ -1098,12 +1103,12 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[500],
   },
   segmentTextActive: {
     color: themeColors.neutral[900],
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   dateRow: {
     flexDirection: 'row',
@@ -1123,10 +1128,12 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   datePlaceholder: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
   },
   selectorButton: {
@@ -1143,10 +1150,12 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[900],
   },
   selectorPlaceholder: {
     fontSize: 16,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
   },
   chipsContainer: {
@@ -1168,8 +1177,8 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[700],
-    fontWeight: '500',
     flexShrink: 1,
   },
   // Selection view styles
@@ -1196,7 +1205,7 @@ const styles = StyleSheet.create({
   selectionTitle: {
     flex: 1,
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
     textAlign: 'center',
   },
@@ -1218,11 +1227,12 @@ const styles = StyleSheet.create({
   },
   selectionItemText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
   },
   selectionItemSubtext: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     marginTop: 2,
   },
@@ -1247,6 +1257,7 @@ const styles = StyleSheet.create({
   },
   selectionEmptyText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textAlign: 'center',
   },

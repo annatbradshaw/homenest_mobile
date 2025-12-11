@@ -70,9 +70,9 @@ export function Input({
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           >
             {showPassword ? (
-              <EyeOff size={20} color={colors.neutral[500]} />
+              <EyeOff size={20} color={colors.neutral[400]} />
             ) : (
-              <Eye size={20} color={colors.neutral[500]} />
+              <Eye size={20} color={colors.neutral[400]} />
             )}
           </TouchableOpacity>
         ) : (
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[700],
+    color: colors.charcoal,
     marginBottom: spacing[1.5],
   },
   inputContainer: {
@@ -101,12 +101,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: componentStyles.input.height,
     borderWidth: 1,
-    borderColor: colors.neutral[300],
+    borderColor: colors.neutral[200],
     borderRadius: componentStyles.input.borderRadius,
     backgroundColor: colors.white,
   },
   inputContainerFocused: {
-    borderColor: colors.primary[500],
+    borderColor: colors.primary[500], // Forest green focus
     borderWidth: 2,
   },
   inputContainerError: {
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: componentStyles.input.fontSize,
-    color: colors.neutral[900],
+    color: colors.charcoal,
     paddingHorizontal: componentStyles.input.paddingHorizontal,
   },
   inputWithLeftIcon: {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: typography.fontSize.sm,
-    color: colors.neutral[500],
+    color: colors.neutral[400],
     marginTop: spacing[1],
   },
 });

@@ -10,23 +10,25 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
+import { colors } from '../../config/theme';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'ios' ? 52 + insets.bottom : 60;
-  const { isDark, colors } = useTheme();
+  const { isDark } = useTheme();
   const { t } = useLanguage();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: isDark ? colors.neutral[50] : colors.neutral[900],
+        // Updated with brandbook colors
+        tabBarActiveTintColor: isDark ? colors.primary[400] : colors.primary[500], // Forest green
         tabBarInactiveTintColor: isDark ? colors.neutral[500] : colors.neutral[400],
         tabBarStyle: {
-          backgroundColor: isDark ? colors.neutral[900] : '#fff',
+          backgroundColor: isDark ? colors.neutral[900] : colors.warmWhite,
           borderTopWidth: 1,
-          borderTopColor: isDark ? colors.neutral[800] : colors.neutral[100],
+          borderTopColor: isDark ? colors.neutral[800] : colors.neutral[200],
           height: tabBarHeight,
           paddingTop: 6,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom : 6,

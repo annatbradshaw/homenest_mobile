@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../stores/AuthContext';
 import { useTheme } from '../../stores/ThemeContext';
 import { useLanguage } from '../../stores/LanguageContext';
+import { typography } from '../../config/theme';
 import { Avatar } from '../../components/ui';
 
 interface MenuItemProps {
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayMedium,
     letterSpacing: -0.5,
   },
   profileCard: {
@@ -251,10 +252,11 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
   },
   profileEmail: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     marginTop: 2,
   },
   menuSection: {
@@ -283,14 +285,16 @@ const styles = StyleSheet.create({
   },
   menuTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
   },
   menuSubtitle: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     marginTop: 2,
   },
   version: {
     fontSize: 13,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 16,

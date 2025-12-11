@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle, ViewProps, TouchableOpacity } from 'react-native';
 import { colors, borderRadius, spacing, shadows } from '../../config/theme';
 
-type CardVariant = 'default' | 'elevated' | 'outlined';
+type CardVariant = 'default' | 'elevated' | 'outlined' | 'cream';
 
 interface CardProps extends ViewProps {
   variant?: CardVariant;
@@ -85,12 +85,17 @@ const styles = StyleSheet.create({
   },
   elevated: {
     backgroundColor: colors.white,
-    ...shadows.md,
+    ...shadows.base,
   },
   outlined: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.neutral[300],
+    borderColor: colors.neutral[200],
+  },
+  // New cream variant for tip cards per brandbook
+  cream: {
+    backgroundColor: colors.cream,
+    borderWidth: 0,
   },
   header: {
     paddingBottom: spacing[3],

@@ -22,10 +22,12 @@ import { useProject } from '../../../stores/ProjectContext';
 import { useTodos, useUpdateTodo, useCreateTodo } from '../../../hooks/useTodos';
 import { useStages } from '../../../hooks/useStages';
 import { useTeamMembers } from '../../../hooks/useTeamMembers';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
+import { CircularProgress } from '../../../components/ui';
 import { Todo, TodoStatus, TodoPriority } from '../../../types/database';
 import { useTheme } from '../../../stores/ThemeContext';
 import { useLanguage } from '../../../stores/LanguageContext';
+import { ConfettiCelebration } from '../../../components/animations';
 
 type ModalView = 'form' | 'assignee' | 'stages';
 
@@ -89,6 +91,7 @@ export default function TodosScreen() {
   });
   const [newTag, setNewTag] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -122,6 +125,10 @@ export default function TodosScreen() {
         id: todo.id,
         updates: { status: newStatus },
       });
+      // Show confetti when task is completed
+      if (newStatus === 'completed' && todo.status !== 'completed') {
+        setShowConfetti(true);
+      }
     } catch (error) {
       Alert.alert(t('common.error'), t('errors.failedUpdateTask'));
     }
@@ -628,23 +635,24 @@ export default function TodosScreen() {
         {/* Progress Card */}
         {stats.total > 0 && (
           <View style={styles.progressCard}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>{t('todos.taskProgress')}</Text>
-              <Text style={styles.progressPercent}>
-                {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
-              </Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: stats.total > 0 ? `${(stats.completed / stats.total) * 100}%` : '0%' },
-                ]}
+            <View style={styles.progressCardContent}>
+              <View style={styles.progressCardText}>
+                <Text style={styles.progressTitle}>{t('todos.taskProgress')}</Text>
+                <Text style={styles.progressSubtext}>
+                  {stats.completed} / {stats.total} {t('todos.tasksCompleted')}
+                </Text>
+              </View>
+              <CircularProgress
+                progress={stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}
+                size={72}
+                strokeWidth={6}
+                progressColor="rgba(255,255,255,0.95)"
+                trackColor="rgba(255,255,255,0.25)"
+                showPercentage={true}
+                textColor="#fff"
+                textStyle={{ fontFamily: typography.fontFamily.displayBold, fontSize: 18 }}
               />
             </View>
-            <Text style={styles.progressSubtext}>
-              {stats.completed} / {stats.total} {t('todos.tasksCompleted')}
-            </Text>
           </View>
         )}
 
@@ -792,6 +800,12 @@ export default function TodosScreen() {
           {modalView === 'stages' && renderStagesSelection()}
         </SafeAreaView>
       </Modal>
+
+      {/* Confetti celebration for completed tasks */}
+      <ConfettiCelebration
+        visible={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -832,13 +846,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
   },
   addButton: {
@@ -896,37 +911,24 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
   },
-  progressHeader: {
+  progressCardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+  },
+  progressCardText: {
+    flex: 1,
   },
   progressTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 17,
+    fontFamily: typography.fontFamily.displayMedium,
     color: '#fff',
-  },
-  progressPercent: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: -0.5,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 3,
-    marginBottom: 12,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 3,
+    marginBottom: 4,
   },
   progressSubtext: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    fontFamily: typography.fontFamily.body,
+    color: 'rgba(255,255,255,0.75)',
   },
   emptyContainer: {
     flex: 1,
@@ -959,7 +961,7 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyMedium,
     color: themeColors.neutral[900],
     lineHeight: 22,
     marginBottom: 4,
@@ -1042,12 +1044,13 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.displayMedium,
     color: themeColors.neutral[900],
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 15,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[500],
     textAlign: 'center',
   },

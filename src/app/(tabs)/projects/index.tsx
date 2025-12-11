@@ -14,7 +14,8 @@ import { Plus, FolderOpen, MapPin, Calendar, Check } from 'lucide-react-native';
 import { useProjects } from '../../../hooks/useProjects';
 import { useProject } from '../../../stores/ProjectContext';
 import { LoadingSpinner, EmptyState } from '../../../components/ui';
-import { colors as themeColors } from '../../../config/theme';
+import { colors as themeColors, typography } from '../../../config/theme';
+import { CircularProgress } from '../../../components/ui';
 import { Project, ProjectStatus } from '../../../types/database';
 import { useCurrency } from '../../../stores/CurrencyContext';
 import { useTheme } from '../../../stores/ThemeContext';
@@ -116,21 +117,23 @@ export default function ProjectsScreen() {
 
           {budget > 0 && (
             <View style={styles.budgetSection}>
-              <View style={styles.budgetRow}>
-                <Text style={[styles.budgetSpent, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(spent)}</Text>
-                <Text style={[styles.budgetTotal, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}> / {formatAmount(budget)}</Text>
+              <View style={styles.budgetInfo}>
+                <View style={styles.budgetRow}>
+                  <Text style={[styles.budgetSpent, { color: isDark ? colors.neutral[50] : colors.neutral[900] }]}>{formatAmount(spent)}</Text>
+                  <Text style={[styles.budgetTotal, { color: isDark ? colors.neutral[400] : colors.neutral[400] }]}> / {formatAmount(budget)}</Text>
+                </View>
+                <Text style={[styles.budgetLabel, { color: isDark ? colors.neutral[400] : colors.neutral[500] }]}>{t('expenses.budgetUsed')}</Text>
               </View>
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${Math.min(percentage, 100)}%`,
-                      backgroundColor: spent > budget ? colors.danger[500] : colors.primary[500],
-                    },
-                  ]}
-                />
-              </View>
+              <CircularProgress
+                progress={Math.min(percentage, 100)}
+                size={44}
+                strokeWidth={4}
+                progressColor={spent > budget ? colors.danger[500] : colors.primary[500]}
+                trackColor={isDark ? colors.neutral[700] : colors.neutral[200]}
+                showPercentage={true}
+                textColor={isDark ? colors.neutral[50] : colors.neutral[900]}
+                textStyle={{ fontFamily: typography.fontFamily.bodySemibold, fontSize: 11 }}
+              />
             </View>
           )}
         </View>
@@ -329,29 +332,30 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: themeColors.neutral[100],
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  budgetInfo: {
+    flex: 1,
   },
   budgetRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 8,
   },
   budgetSpent: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodySemibold,
     color: themeColors.neutral[900],
   },
   budgetTotal: {
     fontSize: 14,
+    fontFamily: typography.fontFamily.body,
     color: themeColors.neutral[400],
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: themeColors.neutral[100],
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
+  budgetLabel: {
+    fontSize: 12,
+    fontFamily: typography.fontFamily.body,
+    marginTop: 2,
   },
 });
